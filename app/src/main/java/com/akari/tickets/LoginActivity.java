@@ -33,6 +33,7 @@ import okhttp3.CookieJar;
 import okhttp3.FormBody;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -40,7 +41,6 @@ import okhttp3.Response;
 
 public class LoginActivity extends AppCompatActivity implements View.OnTouchListener, View.OnClickListener {
 
-//    private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     private OkHttpClient client;
     private EditText etUsername;
     private EditText etPassword;
@@ -86,8 +86,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
         HttpsUtils.SSLParams sslParams = HttpsUtils.getSslSocketFactory(null, null, null);
         client = new OkHttpClient.Builder().sslSocketFactory(sslParams.sSLSocketFactory, sslParams.trustManager).build();
 
-        Random random = new Random();
-        get(client, "https://kyfw.12306.cn/otn/passcodeNew/getPassCodeNew?module=login&rand=sjrand&" + random.nextDouble(), new Callback() {
+        get(client, "https://kyfw.12306.cn/otn/login/init", new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
 
@@ -95,21 +94,37 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                final Bitmap bitmap = BitmapFactory.decodeStream(response.body().byteStream());
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        captcha.setImageBitmap(bitmap);
-                    }
-                });
                 List<String> list = response.headers("Set-Cookie");
                 if (!list.isEmpty()) {
-                    jsessionid = list.get(0).substring(0, 44);
-                    currentCaptchaType = list.get(1).substring(0, 23);
-                    bigipServerotn = list.get(2).substring(0, 36);
+                    jsessionid = list.get(0).split(" ")[0];
+                    bigipServerotn = list.get(1).split(" ")[0];
                 }
+
+                Random random = new Random();
+                get(client, "https://kyfw.12306.cn/otn/passcodeNew/getPassCodeNew?module=login&rand=sjrand&" + random.nextDouble(), new Callback() {
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+
+                    }
+
+                    @Override
+                    public void onResponse(Call call, Response response) throws IOException {
+                        final Bitmap bitmap = BitmapFactory.decodeStream(response.body().byteStream());
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                captcha.setImageBitmap(bitmap);
+                            }
+                        });
+                        List<String> list = response.headers("Set-Cookie");
+                        if (!list.isEmpty()) {
+                            currentCaptchaType = list.get(0).split(" ")[0];
+                        }
+                    }
+                });
             }
         });
+
     }
 
     @Override
@@ -221,8 +236,14 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
                     JSONObject object = new JSONObject(response.body().string());
                     String result = object.getJSONObject("data").getString("result");
                     if (result.equals("1")) {
-                        String url = "https://kyfw.12306.cn/otn/login/loginAysnSuggest?loginUserDTO.user_name=" + username + "&userDTO.password=" + password + "&randCode=" + randCode;
-                        get(client, url, new Callback() {
+                        String url = "https://kyfw.12306.cn/otn/login/loginAysnSuggest";
+                        String randCode1 = randCode.replaceAll("%2C", ",");
+
+                        FormBody.Builder builder = new FormBody.Builder();
+                        builder.add("loginUserDTO.user_name", username);
+                        builder.add("userDTO.password", password);
+                        builder.add("randCode", randCode1);
+                        post(client, url, builder.build(), new Callback() {
                             @Override
                             public void onFailure(Call call, IOException e) {
 
@@ -230,27 +251,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
 
                             @Override
                             public void onResponse(Call call, Response response) throws IOException {
-//                                try {
-//                                    JSONObject object = new JSONObject(response.body().string());
-//                                    if (!object.getJSONObject("data").isNull("loginCheck") && object.getJSONObject("data").getString("loginCheck").equals("Y")) {
-//                                        runOnUiThread(new Runnable() {
-//                                            @Override
-//                                            public void run() {
-//                                                Toast.makeText(LoginActivity.this, "登录成功", Toast.LENGTH_SHORT).show();
-//                                            }
-//                                        });
-//                                    }
-//                                    else {
-//                                        runOnUiThread(new Runnable() {
-//                                            @Override
-//                                            public void run() {
-//                                                Toast.makeText(LoginActivity.this, "用户名或密码错误", Toast.LENGTH_SHORT).show();
-//                                            }
-//                                        });
-//                                    }
-//                                } catch (JSONException e) {
-//                                    e.printStackTrace();
-//                                }
                                 System.out.println(response.body().string());
                             }
                         });
@@ -306,9 +306,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
     }
 
     private void post(OkHttpClient client, String url, RequestBody body, Callback callback) {
-        String s = "_jc_save_fromStation=%u5317%u4EAC%2CBJP;" + "_jc_save_toStation=%u4E07%u5DDE%2CWYW;" + "_jc_save_fromDate=2017-01-22;" + "_jc_save_toDate=2016-12-24;" + "_jc_save_wfdc_flag=dc;";
         Request request = new Request.Builder().url(url)
-                .addHeader("Cookie", jsessionid + s + bigipServerotn + currentCaptchaType)
+                .addHeader("Cookie", jsessionid + bigipServerotn + currentCaptchaType)
                 .post(body)
                 .build();
         client.newCall(request).enqueue(callback);

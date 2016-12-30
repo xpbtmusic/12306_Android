@@ -1,4 +1,4 @@
-package com.akari.tickets.activities;
+package com.akari.tickets.activity;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;

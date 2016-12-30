@@ -2,7 +2,6 @@ package com.akari.tickets.activity;
 
 import android.app.DatePickerDialog;
 import android.content.DialogInterface;
-import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -15,7 +14,6 @@ import com.akari.tickets.R;
 import com.akari.tickets.adapter.PassengersAdapter;
 import com.akari.tickets.adapter.SeatsAdapter;
 import com.akari.tickets.adapter.TrainsAdapter;
-import com.akari.tickets.fragment.DatePickerFragment;
 
 import java.util.ArrayList;
 import java.util.Calendar;

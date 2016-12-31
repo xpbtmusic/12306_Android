@@ -60,6 +60,7 @@
             android:layout_weight="1"
             android:padding="16dp"
             android:layout_marginLeft="32dp"
+            android:lineSpacingExtra="8dp"
             android:textSize="14sp"
             android:text="江湖倦, 科技手, 打瞌睡"
             android:textColor="?android:attr/textColorPrimary"/>
@@ -86,6 +87,7 @@
             android:layout_weight="1"
             android:padding="16dp"
             android:layout_marginLeft="32dp"
+            android:lineSpacingExtra="8dp"
             android:textSize="14sp"
             android:text="T368, T122, T253"
             android:textColor="?android:attr/textColorPrimary"/>
@@ -112,6 +114,7 @@
             android:layout_weight="1"
             android:padding="16dp"
             android:layout_marginLeft="32dp"
+            android:lineSpacingExtra="8dp"
             android:textSize="14sp"
             android:text="硬座, 硬卧"
             android:textColor="?android:attr/textColorPrimary"/>

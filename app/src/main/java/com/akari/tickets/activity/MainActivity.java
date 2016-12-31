@@ -11,6 +11,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.akari.tickets.R;
+import com.akari.tickets.adapter.Date2Adapter;
 import com.akari.tickets.adapter.PassengersAdapter;
 import com.akari.tickets.adapter.SeatsAdapter;
 import com.akari.tickets.adapter.TrainsAdapter;
@@ -25,6 +26,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView chooseTrains;
     private TextView chooseSeats;
     private TextView chooseDate;
+    private TextView chooseDate2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,12 +37,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         chooseTrains = (TextView) findViewById(R.id.choose_trains);
         chooseSeats = (TextView) findViewById(R.id.choose_seats);
         chooseDate = (TextView) findViewById(R.id.choose_date);
+        chooseDate2 = (TextView) findViewById(R.id.choose_date2);
         loadDefaultData();
 
         choosePassengers.setOnClickListener(this);
         chooseTrains.setOnClickListener(this);
         chooseSeats.setOnClickListener(this);
         chooseDate.setOnClickListener(this);
+        chooseDate2.setOnClickListener(this);
     }
 
     private void loadDefaultData() {
@@ -65,6 +69,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.choose_date:
                 buildChooseDateDialog();
+                break;
+            case R.id.choose_date2:
+                buildChooseDate2Dialog();
+                break;
             default:
                 break;
         }
@@ -75,7 +83,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         View view = View.inflate(MainActivity.this, R.layout.choose_passengers, null);
         ListView listView = (ListView) view.findViewById(R.id.list_view);
-        List<String> list = new ArrayList<>();
+        final List<String> list = new ArrayList<>();
         list.add("交互");
         list.add("三等功");
         list.add("任何人");
@@ -88,7 +96,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                System.out.println(PassengersAdapter.checkStatus);
+                StringBuilder builder = new StringBuilder();
+                boolean first = true;
+
+                for (int i = 0; i < list.size(); i ++) {
+                    if (PassengersAdapter.checkStatus.get(i)) {
+                        if (first) {
+                            builder.append(list.get(i));
+                            first = false;
+                        }
+                        else {
+                            builder.append(", ");
+                            builder.append(list.get(i));
+                        }
+                    }
+                }
+                choosePassengers.setText(builder.toString());
             }
         });
         builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
@@ -105,7 +128,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         View view = View.inflate(MainActivity.this, R.layout.choose_trains, null);
         ListView listView = (ListView) view.findViewById(R.id.list_view);
-        List<String> list = new ArrayList<>();
+        final List<String> list = new ArrayList<>();
         list.add("T368");
         list.add("T368");
         list.add("T368");
@@ -124,12 +147,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         list.add("T368");
         listView.setAdapter(new TrainsAdapter(MainActivity.this, list));
 
-        builder.setTitle("选择席别");
+        builder.setTitle("选择车次");
         builder.setView(view);
         builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                System.out.println(TrainsAdapter.checkStatus);
+                StringBuilder builder = new StringBuilder();
+                boolean first = true;
+
+                for (int i = 0; i < list.size(); i ++) {
+                    if (TrainsAdapter.checkStatus.get(i)) {
+                        if (first) {
+                            builder.append(list.get(i));
+                            first = false;
+                        }
+                        else {
+                            builder.append(", ");
+                            builder.append(list.get(i));
+                        }
+                    }
+                }
+                chooseTrains.setText(builder.toString());
             }
         });
         builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
@@ -153,7 +191,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                System.out.println(SeatsAdapter.checkStatus);
+                StringBuilder builder = new StringBuilder();
+                boolean first = true;
+
+                for (int i = 0; i < SeatsAdapter.seats.length; i ++) {
+                    if (SeatsAdapter.checkStatus.get(i)) {
+                        if (first) {
+                            builder.append(SeatsAdapter.seats[i]);
+                            first = false;
+                        }
+                        else {
+                            builder.append(", ");
+                            builder.append(SeatsAdapter.seats[i]);
+                        }
+                    }
+                }
+                chooseSeats.setText(builder.toString());
             }
         });
         builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
@@ -170,14 +223,58 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        fragment.show(getSupportFragmentManager(), "datePicker");
         String date = chooseDate.getText().toString();
         int year = Integer.parseInt(date.split("-")[0]);
-        int month = Integer.parseInt(date.split("-")[1]) - 1;
+        int month = Integer.parseInt(date.split("-")[1]);
         int day = Integer.parseInt(date.split("-")[2]);
-        DatePickerDialog dialog = new DatePickerDialog(MainActivity.this, this, year, month, day);
+        DatePickerDialog dialog = new DatePickerDialog(MainActivity.this, this, year, month - 1, day);
         dialog.show();
     }
 
     @Override
     public void onDateSet(DatePicker view, int year, int month, int day) {
         chooseDate.setText(year + "-" + (month + 1) + "-" + day);
+    }
+
+    private void buildChooseDate2Dialog() {
+        String date = chooseDate.getText().toString();
+        int year = Integer.parseInt(date.split("-")[0]);
+        int month = Integer.parseInt(date.split("-")[1]);
+        int day = Integer.parseInt(date.split("-")[2]);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+
+        View view = View.inflate(MainActivity.this, R.layout.choose_date2, null);
+        ListView listView = (ListView) view.findViewById(R.id.list_view);
+        listView.setAdapter(new Date2Adapter(MainActivity.this, year, month, day));
+
+        builder.setTitle("备选日期");
+        builder.setView(view);
+        builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                StringBuilder builder = new StringBuilder();
+                boolean first = true;
+
+                for (int i = 0; i < Date2Adapter.date2.length; i ++) {
+                    if (Date2Adapter.checkStatus.get(i)) {
+                        if (first) {
+                            builder.append(Date2Adapter.date2[i]);
+                            first = false;
+                        }
+                        else {
+                            builder.append(", ");
+                            builder.append(Date2Adapter.date2[i]);
+                        }
+                    }
+                }
+                chooseDate2.setText(builder.toString());
+            }
+        });
+        builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+        });
+        builder.show();
     }
 }

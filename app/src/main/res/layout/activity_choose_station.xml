@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/activity_choose_station"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.akari.tickets.activity.ChooseStationActivity">
+    <!--<android.support.v7.widget.RecyclerView-->
+        <!--android:id="@+id/recycler_view"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent" />-->
+    <TextView
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:textSize="14sp"
+        android:textColor="?android:colorBackground"
+        android:background="@color/colorPrimary"/>
+    <ListView
+        android:id="@+id/list_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/divider"/>
+
+    <com.bigkoo.quicksidebar.QuickSideBarTipsView
+        android:id="@+id/quickSideBarTipsView"
+        android:layout_width="@dimen/height_quicksidebartips"
+        android:layout_height="match_parent"
+        android:layout_toLeftOf="@+id/quickSideBarView"
+        android:layout_below="@id/divider"
+        android:layout_marginTop="-16dp"
+        app:sidebarBackgroundColor="@color/colorPrimary"
+        app:sidebarTextColor="@android:color/white"
+        app:sidebarTextSize="@dimen/textSize_quicksidebartips" />
+    <com.bigkoo.quicksidebar.QuickSideBarView
+        android:id="@id/quickSideBarView"
+        android:layout_width="20dp"
+        android:layout_height="match_parent"
+        android:layout_alignParentRight="true"
+        android:layout_below="@id/divider"
+        android:layout_marginTop="20dp"
+        app:sidebarItemHeight="18dp"
+        app:sidebarTextColor="@android:color/black"
+        app:sidebarTextColorChoose="@color/colorPrimary"
+        app:sidebarTextSize="@dimen/textSize_quicksidebar"
+        app:sidebarTextSizeChoose="@dimen/textSize_quicksidebar_choose" />
+</RelativeLayout>

@@ -2,10 +2,12 @@ package com.akari.tickets.activity;
 
 import android.app.DatePickerDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -22,29 +24,38 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, DatePickerDialog.OnDateSetListener {
 
+    private TextView fromStation;
+    private TextView toStation;
     private TextView choosePassengers;
     private TextView chooseTrains;
     private TextView chooseSeats;
     private TextView chooseDate;
     private TextView chooseDate2;
+    private Button button;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        fromStation = (TextView) findViewById(R.id.from_station);
+        toStation = (TextView) findViewById(R.id.to_station);
         choosePassengers = (TextView) findViewById(R.id.choose_passengers);
         chooseTrains = (TextView) findViewById(R.id.choose_trains);
         chooseSeats = (TextView) findViewById(R.id.choose_seats);
         chooseDate = (TextView) findViewById(R.id.choose_date);
         chooseDate2 = (TextView) findViewById(R.id.choose_date2);
+        button = (Button) findViewById(R.id.button);
         loadDefaultData();
 
+        fromStation.setOnClickListener(this);
+        toStation.setOnClickListener(this);
         choosePassengers.setOnClickListener(this);
         chooseTrains.setOnClickListener(this);
         chooseSeats.setOnClickListener(this);
         chooseDate.setOnClickListener(this);
         chooseDate2.setOnClickListener(this);
+        button.setOnClickListener(this);
     }
 
     private void loadDefaultData() {
@@ -58,6 +69,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
+            case R.id.from_station:
+
+                break;
+            case R.id.to_station:
+
+                break;
             case R.id.choose_passengers:
                 buildChoosePassengersDialog();
                 break;
@@ -72,6 +89,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.choose_date2:
                 buildChooseDate2Dialog();
+                break;
+            case R.id.button:
+                startActivity(new Intent(MainActivity.this, ChooseStationActivity.class));
                 break;
             default:
                 break;

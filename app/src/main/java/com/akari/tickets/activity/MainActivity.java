@@ -17,6 +17,8 @@ import com.akari.tickets.adapter.Date2Adapter;
 import com.akari.tickets.adapter.PassengersAdapter;
 import com.akari.tickets.adapter.SeatsAdapter;
 import com.akari.tickets.adapter.TrainsAdapter;
+import com.akari.tickets.beans.Passenger;
+import com.akari.tickets.utils.PassengerUtil;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -61,6 +63,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void loadDefaultData() {
+        choosePassengers.setText(PassengerUtil.getUserSelf().getPassenger_name());
+
         Calendar calendar = Calendar.getInstance();
         int year = calendar.get(Calendar.YEAR);
         int month = calendar.get(Calendar.MONTH);
@@ -123,12 +127,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         View view = View.inflate(MainActivity.this, R.layout.choose_passengers, null);
         ListView listView = (ListView) view.findViewById(R.id.list_view);
+
+        List<Passenger> passengers = PassengerUtil.getPassengers();
         final List<String> list = new ArrayList<>();
-        list.add("交互");
-        list.add("三等功");
-        list.add("任何人");
-        list.add("多少");
-        list.add("热二天");
+        for (Passenger p : passengers) {
+            list.add(p.getPassenger_name());
+        }
+
         listView.setAdapter(new PassengersAdapter(MainActivity.this, list));
 
         builder.setTitle("选择乘车人");

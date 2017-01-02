@@ -1,5 +1,6 @@
 package com.akari.tickets.activity;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.support.v7.app.AppCompatActivity;
@@ -13,7 +14,9 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.akari.tickets.R;
-import com.zhy.http.okhttp.https.HttpsUtils;
+import com.akari.tickets.beans.Passenger;
+import com.akari.tickets.utils.HttpUtil;
+import com.akari.tickets.utils.PassengerUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -26,14 +29,10 @@ import java.util.Random;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.FormBody;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class LoginActivity extends AppCompatActivity implements View.OnTouchListener, View.OnClickListener {
 
-    private OkHttpClient client;
     private EditText etUsername;
     private EditText etPassword;
     private ImageView captcha;
@@ -50,12 +49,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
     private String username;
     private String password;
     private String randCode;
-
-    private String jsessionid = "";
-    private String currentCaptchaType = "";
-    private String bigipServerotn = "";
-    private String nrf;
-    private String cookie = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,11 +71,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
         captcha.setOnTouchListener(this);
         btnLogin.setOnClickListener(this);
 
-        HttpsUtils.SSLParams sslParams = HttpsUtils.getSslSocketFactory(null, null, null);
-        client = new OkHttpClient.Builder().sslSocketFactory(sslParams.sSLSocketFactory, sslParams.trustManager).build();
-
-        get(client, "https://kyfw.12306.cn/otn/login/init", new InitCallback());
-
+        HttpUtil.get("https://kyfw.12306.cn/otn/login/init", new InitCallback());
     }
 
     @Override
@@ -182,7 +171,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
 
     private void checkRandCodeAndUser() {
         String url = "https://kyfw.12306.cn/otn/passcodeNew/checkRandCodeAnsyn?randCode=" + randCode + "&rand=sjrand";
-        get(client, url, new CheckRandCodeCallback());
+        HttpUtil.get(url, new CheckRandCodeCallback());
     }
 
     private String getRandCode() {
@@ -212,21 +201,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
         return randCode;
     }
 
-    private void get(OkHttpClient client, String url, Callback callback) {
-        Request request = new Request.Builder().url(url)
-                .addHeader("Cookie", cookie)
-                .build();
-        client.newCall(request).enqueue(callback);
-    }
-
-    private void post(OkHttpClient client, String url, RequestBody body, Callback callback) {
-        Request request = new Request.Builder().url(url)
-                .addHeader("Cookie", cookie)
-                .post(body)
-                .build();
-        client.newCall(request).enqueue(callback);
-    }
-
     class InitCallback implements Callback {
         @Override
         public void onFailure(Call call, IOException e) {
@@ -237,13 +211,12 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
         public void onResponse(Call call, Response response) throws IOException {
             List<String> list = response.headers("Set-Cookie");
             if (!list.isEmpty()) {
-                jsessionid = list.get(0).split(" ")[0];
-                bigipServerotn = list.get(1).split(" ")[0];
-                cookie = jsessionid + bigipServerotn;
+                String jsessionid = list.get(0).split(" ")[0];
+                String bigipServerotn = list.get(1).split(" ")[0];
+                HttpUtil.cookie = jsessionid + bigipServerotn;
             }
-
             Random random = new Random();
-            get(client, "https://kyfw.12306.cn/otn/passcodeNew/getPassCodeNew?module=login&rand=sjrand&" + random.nextDouble(), new GetPassCodeNewCallback());
+            HttpUtil.get("https://kyfw.12306.cn/otn/passcodeNew/getPassCodeNew?module=login&rand=sjrand&" + random.nextDouble(), new GetPassCodeNewCallback());
         }
     }
 
@@ -264,8 +237,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
             });
             List<String> list = response.headers("Set-Cookie");
             if (!list.isEmpty()) {
-                currentCaptchaType = list.get(0).split(" ")[0];
-                cookie = cookie + currentCaptchaType;
+                String currentCaptchaType = list.get(0).split(" ")[0];
+                HttpUtil.cookie = HttpUtil.cookie + currentCaptchaType;
             }
         }
     }
@@ -290,7 +263,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
                     builder.add("userDTO.password", password);
                     builder.add("randCode", randCode1);
 
-                    post(client, url, builder.build(), new LoginSuggestCallback());
+                    HttpUtil.post(url, builder.build(), new LoginSuggestCallback());
                 }
                 else {
                     runOnUiThread(new Runnable() {
@@ -321,13 +294,13 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
 
                 if (!data.isNull("loginCheck") && data.getString("loginCheck").equals("Y")) {
                     String url = "https://kyfw.12306.cn/otn/login/userLogin";
-                    nrf = response.header("Set-Cookie");
-                    cookie = cookie + nrf;
+                    String nrf = response.header("Set-Cookie");
+                    HttpUtil.cookie = HttpUtil.cookie + nrf;
 
                     FormBody.Builder builder = new FormBody.Builder();
                     builder.add("_json_att", "");
 
-                    post(client, url, builder.build(), new UserLoginCallback());
+                    HttpUtil.post(url, builder.build(), new UserLoginCallback());
                 }
                 else {
                     final String messages = object.getString("messages");
@@ -357,8 +330,14 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
 
         @Override
         public void onResponse(Call call, Response response) throws IOException {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(LoginActivity.this, "登录成功", Toast.LENGTH_SHORT).show();
+                }
+            });
             String url = "https://kyfw.12306.cn/otn/passengers/init";
-            get(client, url, new PassengersCallback());
+            HttpUtil.get(url, new PassengersCallback());
         }
     }
 
@@ -370,7 +349,11 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
 
         @Override
         public void onResponse(Call call, Response response) throws IOException {
-            System.out.println("wwwwwwwwwwwwww");
+            String json = response.body().string().split("passengers=")[1].split(";")[0];
+            PassengerUtil.savePassengers(json);
+            startActivity(new Intent(LoginActivity.this, MainActivity.class));
+            finish();
         }
     }
+
 }

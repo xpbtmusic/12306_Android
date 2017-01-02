@@ -63,7 +63,6 @@
             android:layout_marginLeft="32dp"
             android:lineSpacingExtra="8dp"
             android:textSize="14sp"
-            android:text="江湖倦, 科技手, 打瞌睡"
             android:textColor="?android:attr/textColorPrimary"/>
     </LinearLayout>
     <View

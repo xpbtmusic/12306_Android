@@ -38,14 +38,11 @@ public class ChooseStationActivity extends AppCompatActivity implements OnQuickS
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setDisplayShowHomeEnabled(true);
 
-//        recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         listView = (ListView) findViewById(R.id.list_view);
         quickSideBarTipsView = (QuickSideBarTipsView) findViewById(R.id.quickSideBarTipsView);
         quickSideBarView = (QuickSideBarView) findViewById(R.id.quickSideBarView);
         divider = (TextView) findViewById(R.id.divider);
 
-//        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-//        recyclerView.setAdapter(new StationAdapter1());
         listView.setAdapter(new StationAdapter(this));
 
         listView.setOnScrollListener(new AbsListView.OnScrollListener() {

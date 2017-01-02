@@ -16,7 +16,7 @@
         android:layout_height="wrap_content"
         android:padding="16dp"
         android:textSize="14sp"
-        android:textColor="?android:colorBackground"
+        android:textColor="@android:color/white"
         android:background="@color/colorPrimary"/>
     <ListView
         android:id="@+id/list_view"

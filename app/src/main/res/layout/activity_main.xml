@@ -11,8 +11,8 @@
         android:layout_height="wrap_content"
         android:paddingTop="8dp"
         android:paddingBottom="8dp"
-        android:paddingLeft="56dp"
-        android:paddingRight="56dp">
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp">
         <TextView
             android:id="@+id/from_station"
             android:layout_width="0dp"
@@ -23,9 +23,8 @@
             android:text="北京"
             android:gravity="center"/>
         <ImageView
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:padding="16dp"
             android:layout_gravity="center"
             android:src="@mipmap/ic_arrow_back_black_24dp"/>

@@ -32,6 +32,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView chooseDate;
     private TextView chooseDate2;
     private Button button;
+    private static final int GET_FROM_STATION = 1;
+    private static final int GET_TO_STATION = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,10 +72,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.from_station:
-
+                startActivityForResult(new Intent(MainActivity.this, ChooseStationActivity.class), GET_FROM_STATION);
                 break;
             case R.id.to_station:
-
+                startActivityForResult(new Intent(MainActivity.this, ChooseStationActivity.class), GET_TO_STATION);
                 break;
             case R.id.choose_passengers:
                 buildChoosePassengersDialog();
@@ -92,6 +94,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.button:
                 startActivity(new Intent(MainActivity.this, ChooseStationActivity.class));
+                break;
+            default:
+                break;
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case GET_FROM_STATION:
+                if (resultCode == RESULT_OK) {
+                    fromStation.setText(data.getStringExtra("station"));
+                }
+                break;
+            case GET_TO_STATION:
+                if (resultCode == RESULT_OK) {
+                    toStation.setText(data.getStringExtra("station"));
+                }
                 break;
             default:
                 break;

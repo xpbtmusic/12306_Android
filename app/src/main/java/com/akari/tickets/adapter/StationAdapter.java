@@ -44,7 +44,6 @@ public class StationAdapter extends BaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         View view;
         ViewHolder viewHolder;
-
         if (convertView == null) {
             view = View.inflate(context, R.layout.item_station, null);
             viewHolder = new ViewHolder();

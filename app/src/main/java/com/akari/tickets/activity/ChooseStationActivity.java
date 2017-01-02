@@ -1,7 +1,10 @@
 package com.akari.tickets.activity;
 
+import android.content.Intent;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
@@ -30,12 +33,15 @@ public class ChooseStationActivity extends AppCompatActivity implements OnQuickS
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_choose_station);
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setHomeButtonEnabled(true);
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setDisplayShowHomeEnabled(true);
 
-        listView = (ListView) findViewById(R.id.list_view);
 //        recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        listView = (ListView) findViewById(R.id.list_view);
         quickSideBarTipsView = (QuickSideBarTipsView) findViewById(R.id.quickSideBarTipsView);
         quickSideBarView = (QuickSideBarView) findViewById(R.id.quickSideBarView);
-
         divider = (TextView) findViewById(R.id.divider);
 
 //        recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -57,14 +63,25 @@ public class ChooseStationActivity extends AppCompatActivity implements OnQuickS
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(ChooseStationActivity.this, position + "", Toast.LENGTH_SHORT).show();
+                TextView clickTextView = (TextView) view.findViewById(R.id.text_view);
+                Intent intent = new Intent();
+                intent.putExtra("station", clickTextView.getText().toString());
+                setResult(RESULT_OK, intent);
+                finish();
             }
         });
 
         map = new HashMap<>();
         putValue();
-
         quickSideBarView.setOnQuickSideBarTouchListener(this);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -82,67 +99,70 @@ public class ChooseStationActivity extends AppCompatActivity implements OnQuickS
     }
 
     private void showHeader(int firstVisibleItem) {
-        if (firstVisibleItem < 39) {
+        if (firstVisibleItem < 33) {
+            divider.setText("热门车站");
+        }
+        else if (firstVisibleItem < 39 + 33) {
             divider.setText("A");
         }
-        else if (firstVisibleItem < 135) {
+        else if (firstVisibleItem < 135 + 33) {
             divider.setText("B");
         }
-        else if (firstVisibleItem < 241) {
+        else if (firstVisibleItem < 241 + 33) {
             divider.setText("C");
         }
-        else if (firstVisibleItem < 385) {
+        else if (firstVisibleItem < 385 + 33) {
             divider.setText("D");
         }
-        else if (firstVisibleItem < 398) {
+        else if (firstVisibleItem < 398 + 33) {
             divider.setText("E");
         }
-        else if (firstVisibleItem < 455) {
+        else if (firstVisibleItem < 455 + 33) {
             divider.setText("F");
         }
-        else if (firstVisibleItem < 551) {
+        else if (firstVisibleItem < 551 + 33) {
             divider.setText("G");
         }
-        else if (firstVisibleItem < 736) {
+        else if (firstVisibleItem < 736 + 33) {
             divider.setText("H");
         }
-        else if (firstVisibleItem < 860) {
+        else if (firstVisibleItem < 860 + 33) {
             divider.setText("J");
         }
-        else if (firstVisibleItem < 892) {
+        else if (firstVisibleItem < 892 + 33) {
             divider.setText("K");
         }
-        else if (firstVisibleItem < 1073) {
+        else if (firstVisibleItem < 1073 + 33) {
             divider.setText("L");
         }
-        else if (firstVisibleItem < 1141) {
+        else if (firstVisibleItem < 1141 + 33) {
             divider.setText("M");
         }
-        else if (firstVisibleItem < 1211) {
+        else if (firstVisibleItem < 1211 + 33) {
             divider.setText("N");
         }
-        else if (firstVisibleItem < 1277) {
+        else if (firstVisibleItem < 1277 + 33) {
             divider.setText("P");
         }
-        else if (firstVisibleItem < 1355) {
+        else if (firstVisibleItem < 1355 + 33) {
             divider.setText("Q");
         }
-        else if (firstVisibleItem < 1375) {
+        else if (firstVisibleItem < 1375 + 33) {
             divider.setText("R");
         }
-        else if (firstVisibleItem < 1583) {
+        else if (firstVisibleItem < 1583 + 33) {
             divider.setText("S");
         }
-        else if (firstVisibleItem < 1690) {
+        else if (firstVisibleItem < 1690 + 33) {
             divider.setText("T");
         }
-        else if (firstVisibleItem < 1799) {
+        else if (firstVisibleItem < 1799 + 33) {
             divider.setText("W");
         }
-        else if (firstVisibleItem < 1969) {
+        else if (firstVisibleItem < 1969 + 33) {
             divider.setText("X");
         }
-        else if (firstVisibleItem < 2153) {
+        else if (firstVisibleItem < 2153 + 33) {
             divider.setText("Y");
         }
         else {
@@ -151,31 +171,31 @@ public class ChooseStationActivity extends AppCompatActivity implements OnQuickS
     }
 
     private void putValue() {
-        map.put("A", 0);
-        map.put("B", 39);
-        map.put("C", 135);
-        map.put("D", 241);
-        map.put("E", 385);
-        map.put("F", 398);
-        map.put("G", 455);
-        map.put("H", 551);
-        map.put("I", 736);
-        map.put("J", 736);
-        map.put("K", 860);
-        map.put("L", 892);
-        map.put("M", 1073);
-        map.put("N", 1141);
-        map.put("O", 1211);
-        map.put("P", 1211);
-        map.put("Q", 1277);
-        map.put("R", 1355);
-        map.put("S", 1375);
-        map.put("T", 1583);
-        map.put("U", 1690);
-        map.put("V", 1690);
-        map.put("W", 1690);
-        map.put("X", 1799);
-        map.put("Y", 1969);
-        map.put("Z", 2153);
+        map.put("A", 33);
+        map.put("B", 39 + 33);
+        map.put("C", 135 + 33);
+        map.put("D", 241 + 33);
+        map.put("E", 385 + 33);
+        map.put("F", 398 + 33);
+        map.put("G", 455 + 33);
+        map.put("H", 551 + 33);
+        map.put("I", 736 + 33);
+        map.put("J", 736 + 33);
+        map.put("K", 860 + 33);
+        map.put("L", 892 + 33);
+        map.put("M", 1073 + 33);
+        map.put("N", 1141 + 33);
+        map.put("O", 1211 + 33);
+        map.put("P", 1211 + 33);
+        map.put("Q", 1277 + 33);
+        map.put("R", 1355 + 33);
+        map.put("S", 1375 + 33);
+        map.put("T", 1583 + 33);
+        map.put("U", 1690 + 33);
+        map.put("V", 1690 + 33);
+        map.put("W", 1690 + 33);
+        map.put("X", 1799 + 33);
+        map.put("Y", 1969 + 33);
+        map.put("Z", 2153 + 33);
     }
 }

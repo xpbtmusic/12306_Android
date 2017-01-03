@@ -99,67 +99,67 @@ public class ChooseStationActivity extends AppCompatActivity implements OnQuickS
         if (firstVisibleItem < 33) {
             divider.setText("热门车站");
         }
-        else if (firstVisibleItem < 39 + 33) {
+        else if (firstVisibleItem < 72) {
             divider.setText("A");
         }
-        else if (firstVisibleItem < 135 + 33) {
+        else if (firstVisibleItem < 168) {
             divider.setText("B");
         }
-        else if (firstVisibleItem < 241 + 33) {
+        else if (firstVisibleItem < 274) {
             divider.setText("C");
         }
-        else if (firstVisibleItem < 385 + 33) {
+        else if (firstVisibleItem < 418) {
             divider.setText("D");
         }
-        else if (firstVisibleItem < 398 + 33) {
+        else if (firstVisibleItem < 431) {
             divider.setText("E");
         }
-        else if (firstVisibleItem < 455 + 33) {
+        else if (firstVisibleItem < 488) {
             divider.setText("F");
         }
-        else if (firstVisibleItem < 551 + 33) {
+        else if (firstVisibleItem < 584) {
             divider.setText("G");
         }
-        else if (firstVisibleItem < 736 + 33) {
+        else if (firstVisibleItem < 769) {
             divider.setText("H");
         }
-        else if (firstVisibleItem < 860 + 33) {
+        else if (firstVisibleItem < 893) {
             divider.setText("J");
         }
-        else if (firstVisibleItem < 892 + 33) {
+        else if (firstVisibleItem < 925) {
             divider.setText("K");
         }
-        else if (firstVisibleItem < 1073 + 33) {
+        else if (firstVisibleItem < 1106) {
             divider.setText("L");
         }
-        else if (firstVisibleItem < 1141 + 33) {
+        else if (firstVisibleItem < 1174) {
             divider.setText("M");
         }
-        else if (firstVisibleItem < 1211 + 33) {
+        else if (firstVisibleItem < 1244) {
             divider.setText("N");
         }
-        else if (firstVisibleItem < 1277 + 33) {
+        else if (firstVisibleItem < 1310) {
             divider.setText("P");
         }
-        else if (firstVisibleItem < 1355 + 33) {
+        else if (firstVisibleItem < 1388) {
             divider.setText("Q");
         }
-        else if (firstVisibleItem < 1375 + 33) {
+        else if (firstVisibleItem < 1408) {
             divider.setText("R");
         }
-        else if (firstVisibleItem < 1583 + 33) {
+        else if (firstVisibleItem < 1616) {
             divider.setText("S");
         }
-        else if (firstVisibleItem < 1690 + 33) {
+        else if (firstVisibleItem < 1723) {
             divider.setText("T");
         }
-        else if (firstVisibleItem < 1799 + 33) {
+        else if (firstVisibleItem < 1832) {
             divider.setText("W");
         }
-        else if (firstVisibleItem < 1969 + 33) {
+        else if (firstVisibleItem < 2002) {
             divider.setText("X");
         }
-        else if (firstVisibleItem < 2153 + 33) {
+        else if (firstVisibleItem < 2186) {
             divider.setText("Y");
         }
         else {
@@ -169,30 +169,30 @@ public class ChooseStationActivity extends AppCompatActivity implements OnQuickS
 
     private void putValue() {
         map.put("A", 33);
-        map.put("B", 39 + 33);
-        map.put("C", 135 + 33);
-        map.put("D", 241 + 33);
-        map.put("E", 385 + 33);
-        map.put("F", 398 + 33);
-        map.put("G", 455 + 33);
-        map.put("H", 551 + 33);
-        map.put("I", 736 + 33);
-        map.put("J", 736 + 33);
-        map.put("K", 860 + 33);
-        map.put("L", 892 + 33);
-        map.put("M", 1073 + 33);
-        map.put("N", 1141 + 33);
-        map.put("O", 1211 + 33);
-        map.put("P", 1211 + 33);
-        map.put("Q", 1277 + 33);
-        map.put("R", 1355 + 33);
-        map.put("S", 1375 + 33);
-        map.put("T", 1583 + 33);
-        map.put("U", 1690 + 33);
-        map.put("V", 1690 + 33);
-        map.put("W", 1690 + 33);
-        map.put("X", 1799 + 33);
-        map.put("Y", 1969 + 33);
-        map.put("Z", 2153 + 33);
+        map.put("B", 72);
+        map.put("C", 168);
+        map.put("D", 274);
+        map.put("E", 418);
+        map.put("F", 431);
+        map.put("G", 488);
+        map.put("H", 584);
+        map.put("I", 769);
+        map.put("J", 769);
+        map.put("K", 893);
+        map.put("L", 925);
+        map.put("M", 1106);
+        map.put("N", 1174);
+        map.put("O", 1244);
+        map.put("P", 1244);
+        map.put("Q", 1310);
+        map.put("R", 1388);
+        map.put("S", 1408);
+        map.put("T", 1616);
+        map.put("U", 1723);
+        map.put("V", 1723);
+        map.put("W", 1723);
+        map.put("X", 1832);
+        map.put("Y", 2002);
+        map.put("Z", 2186);
     }
 }

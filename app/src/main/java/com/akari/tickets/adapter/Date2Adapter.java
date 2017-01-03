@@ -8,6 +8,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 
 import com.akari.tickets.R;
+import com.akari.tickets.utils.DateUtil;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -31,13 +32,13 @@ public class Date2Adapter extends BaseAdapter {
     private void initData(int year, int month, int day) {
         Calendar calendar = Calendar.getInstance();
         calendar.set(year, month - 1, day - 2);
-        date2[0] = calendar.get(Calendar.YEAR) + "-" + (calendar.get(Calendar.MONTH) + 1) + "-" + calendar.get(Calendar.DAY_OF_MONTH);
+        date2[0] = DateUtil.getDateStr(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
         calendar.set(year, month - 1, day - 1);
-        date2[1] = calendar.get(Calendar.YEAR) + "-" + (calendar.get(Calendar.MONTH) + 1) + "-" + calendar.get(Calendar.DAY_OF_MONTH);
+        date2[1] = DateUtil.getDateStr(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
         calendar.set(year, month - 1, day + 1);
-        date2[2] = calendar.get(Calendar.YEAR) + "-" + (calendar.get(Calendar.MONTH) + 1) + "-" + calendar.get(Calendar.DAY_OF_MONTH);
+        date2[2] = DateUtil.getDateStr(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
         calendar.set(year, month - 1, day + 2);
-        date2[3] = calendar.get(Calendar.YEAR) + "-" + (calendar.get(Calendar.MONTH) + 1) + "-" + calendar.get(Calendar.DAY_OF_MONTH);
+        date2[3] = DateUtil.getDateStr(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
 
         checkStatus = new ArrayList<>();
         for (int i = 0; i < date2.length; i++) {

@@ -14,7 +14,7 @@ public class StationCodeUtil {
     private static HashMap<String, String> name2CodeMap;
     private static HashMap<String, String> name2Letter;
 
-    private void init(Context context) {
+    public static void init(Context context) {
         String s1 = context.getResources().getString(R.string.s1);
         String s2 = context.getResources().getString(R.string.s2);
 
@@ -35,5 +35,7 @@ public class StationCodeUtil {
         }
     }
 
-
+    public static HashMap<String, String> getName2CodeMap() {
+        return name2CodeMap;
+    }
 }

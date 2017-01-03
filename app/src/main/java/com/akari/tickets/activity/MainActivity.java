@@ -18,11 +18,23 @@ import com.akari.tickets.adapter.PassengersAdapter;
 import com.akari.tickets.adapter.SeatsAdapter;
 import com.akari.tickets.adapter.TrainsAdapter;
 import com.akari.tickets.beans.Passenger;
+import com.akari.tickets.utils.DateUtil;
+import com.akari.tickets.utils.HttpUtil;
 import com.akari.tickets.utils.PassengerUtil;
+import com.akari.tickets.utils.StationCodeUtil;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, DatePickerDialog.OnDateSetListener {
 
@@ -36,11 +48,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button button;
     private static final int GET_FROM_STATION = 1;
     private static final int GET_TO_STATION = 2;
+    private static List<String> trains;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        trains = new ArrayList<>();
+        trains.add("Z95");
 
         fromStation = (TextView) findViewById(R.id.from_station);
         toStation = (TextView) findViewById(R.id.to_station);
@@ -69,7 +85,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int year = calendar.get(Calendar.YEAR);
         int month = calendar.get(Calendar.MONTH);
         int day = calendar.get(Calendar.DAY_OF_MONTH);
-        chooseDate.setText(year + "-" + (month + 1) + "-" + day);
+        String dateStr = DateUtil.getDateStr(year, month, day);
+        chooseDate.setText(dateStr);
+        HttpUtil.get(getUrl(), new GetTrainCodeCallBack());
     }
 
     @Override
@@ -110,16 +128,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case GET_FROM_STATION:
                 if (resultCode == RESULT_OK) {
                     fromStation.setText(data.getStringExtra("station"));
+                    chooseTrains.setText("");
+                    chooseSeats.setText("");
+                    HttpUtil.get(getUrl(), new GetTrainCodeCallBack());
                 }
                 break;
             case GET_TO_STATION:
                 if (resultCode == RESULT_OK) {
                     toStation.setText(data.getStringExtra("station"));
+                    chooseTrains.setText("");
+                    chooseSeats.setText("");
+                    HttpUtil.get(getUrl(), new GetTrainCodeCallBack());
                 }
                 break;
             default:
                 break;
         }
+    }
+
+    private String getUrl() {
+        String from_station = StationCodeUtil.getName2CodeMap().get(fromStation.getText().toString());
+        String to_station = StationCodeUtil.getName2CodeMap().get(toStation.getText().toString());
+        String train_date = chooseDate.getText().toString();
+        String purpose_codes = PassengerUtil.getPassenger(choosePassengers.getText().toString().split(",")[0]).getPassenger_type_name();
+        String url = "https://kyfw.12306.cn/otn/leftTicket/queryA?leftTicketDTO.train_date=" + train_date + "&leftTicketDTO.from_station=" + from_station
+                + "&leftTicketDTO.to_station=" + to_station + "&purpose_codes=" + purpose_codes;
+        return url;
     }
 
     private void buildChoosePassengersDialog() {
@@ -173,24 +207,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         View view = View.inflate(MainActivity.this, R.layout.choose_trains, null);
         ListView listView = (ListView) view.findViewById(R.id.list_view);
-        final List<String> list = new ArrayList<>();
-        list.add("T368");
-        list.add("T368");
-        list.add("T368");
-        list.add("T368");
-        list.add("T368");
-        list.add("T368");
-        list.add("T368");
-        list.add("T368");
-        list.add("T368");
-        list.add("T368");
-        list.add("T368");
-        list.add("T368");
-        list.add("T368");
-        list.add("T368");
-        list.add("T368");
-        list.add("T368");
-        listView.setAdapter(new TrainsAdapter(MainActivity.this, list));
+        listView.setAdapter(new TrainsAdapter(MainActivity.this, trains));
 
         builder.setTitle("选择车次");
         builder.setView(view);
@@ -200,15 +217,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 StringBuilder builder = new StringBuilder();
                 boolean first = true;
 
-                for (int i = 0; i < list.size(); i ++) {
+                for (int i = 0; i < trains.size(); i ++) {
                     if (TrainsAdapter.checkStatus.get(i)) {
                         if (first) {
-                            builder.append(list.get(i));
+                            builder.append(trains.get(i));
                             first = false;
                         }
                         else {
                             builder.append(", ");
-                            builder.append(list.get(i));
+                            builder.append(trains.get(i));
                         }
                     }
                 }
@@ -276,7 +293,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onDateSet(DatePicker view, int year, int month, int day) {
-        chooseDate.setText(year + "-" + (month + 1) + "-" + day);
+        String dateStr = DateUtil.getDateStr(year, month, day);
+        chooseDate.setText(dateStr);
+        HttpUtil.get(getUrl(), new GetTrainCodeCallBack());
     }
 
     private void buildChooseDate2Dialog() {
@@ -321,5 +340,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
         builder.show();
+    }
+
+    class GetTrainCodeCallBack implements Callback {
+        @Override
+        public void onFailure(Call call, IOException e) {
+
+        }
+
+        @Override
+        public void onResponse(Call call, Response response) throws IOException {
+            String json = response.body().string();
+            try {
+                JSONArray array = new JSONObject(json).getJSONArray("data");
+                trains.clear();
+                if (array.length() != 0) {
+                    for (int i = 0; i < array.length(); i++) {
+                        trains.add(array.getJSONObject(i).getJSONObject("queryLeftNewDTO").getString("station_train_code"));
+                    }
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

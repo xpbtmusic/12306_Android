@@ -14,9 +14,9 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.akari.tickets.R;
-import com.akari.tickets.beans.Passenger;
 import com.akari.tickets.utils.HttpUtil;
 import com.akari.tickets.utils.PassengerUtil;
+import com.akari.tickets.utils.StationCodeUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -336,6 +336,14 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
                     Toast.makeText(LoginActivity.this, "登录成功", Toast.LENGTH_SHORT).show();
                 }
             });
+
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    StationCodeUtil.init(LoginActivity.this);
+                }
+            }).start();
+
             String url = "https://kyfw.12306.cn/otn/passengers/init";
             HttpUtil.get(url, new PassengersCallback());
         }

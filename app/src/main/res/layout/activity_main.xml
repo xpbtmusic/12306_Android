@@ -89,7 +89,7 @@
             android:layout_marginLeft="32dp"
             android:lineSpacingExtra="8dp"
             android:textSize="14sp"
-            android:text="T368, T122, T253"
+            android:hint="选择车次"
             android:textColor="?android:attr/textColorPrimary"/>
     </LinearLayout>
     <View
@@ -116,7 +116,7 @@
             android:layout_marginLeft="32dp"
             android:lineSpacingExtra="8dp"
             android:textSize="14sp"
-            android:text="硬座, 硬卧"
+            android:hint="选择席别"
             android:textColor="?android:attr/textColorPrimary"/>
     </LinearLayout>
     <View
@@ -167,8 +167,8 @@
             android:padding="16dp"
             android:layout_marginLeft="32dp"
             android:textSize="14sp"
+            android:hint="选择备选日期"
             android:lineSpacingExtra="8dp"
-            android:text="2017-01-26, 2017-01-26, 2017-01-26, 2017-01-26, 2017-01-26"
             android:textColor="?android:attr/textColorPrimary"/>
     </LinearLayout>
     <RelativeLayout

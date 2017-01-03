@@ -27,8 +27,14 @@ public class PassengerUtil {
                 object = array.getJSONObject(i);
                 passenger = new Passenger();
                 passenger.setPassenger_name(object.getString("passenger_name"));
-                passenger.setPassenger_type_name(object.getString("passenger_type_name"));
                 passenger.setIsUserSelf(object.getString("isUserSelf"));
+                if (object.getString("passenger_type_name").equals("成人")) {
+                    passenger.setPassenger_type_name("ADULT");
+                }
+                else {
+                    passenger.setPassenger_type_name("0X00");
+                }
+
                 list.add(passenger);
             }
         } catch (JSONException e) {
@@ -38,6 +44,15 @@ public class PassengerUtil {
 
     public static List<Passenger> getPassengers() {
         return list;
+    }
+
+    public static Passenger getPassenger(String name) {
+        for (Passenger p : list) {
+            if (p.getPassenger_name().equals(name)) {
+                return p;
+            }
+        }
+        return null;
     }
 
     public static Passenger getUserSelf() {

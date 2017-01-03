@@ -55,9 +55,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        trains = new ArrayList<>();
-        trains.add("Z95");
-
         fromStation = (TextView) findViewById(R.id.from_station);
         toStation = (TextView) findViewById(R.id.to_station);
         choosePassengers = (TextView) findViewById(R.id.choose_passengers);
@@ -87,6 +84,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int day = calendar.get(Calendar.DAY_OF_MONTH);
         String dateStr = DateUtil.getDateStr(year, month, day);
         chooseDate.setText(dateStr);
+
+        trains = new ArrayList<>();
         HttpUtil.get(getUrl(), new GetTrainCodeCallBack());
     }
 
@@ -147,11 +146,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private String getUrl() {
+        String url;
         String from_station = StationCodeUtil.getName2CodeMap().get(fromStation.getText().toString());
         String to_station = StationCodeUtil.getName2CodeMap().get(toStation.getText().toString());
         String train_date = chooseDate.getText().toString();
         String purpose_codes = PassengerUtil.getPassenger(choosePassengers.getText().toString().split(",")[0]).getPassenger_type_name();
-        String url = "https://kyfw.12306.cn/otn/leftTicket/queryA?leftTicketDTO.train_date=" + train_date + "&leftTicketDTO.from_station=" + from_station
+        url = "https://kyfw.12306.cn/otn/leftTicket/queryA?leftTicketDTO.train_date=" + train_date + "&leftTicketDTO.from_station=" + from_station
                 + "&leftTicketDTO.to_station=" + to_station + "&purpose_codes=" + purpose_codes;
         return url;
     }
@@ -288,6 +288,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int month = Integer.parseInt(date.split("-")[1]);
         int day = Integer.parseInt(date.split("-")[2]);
         DatePickerDialog dialog = new DatePickerDialog(MainActivity.this, this, year, month - 1, day);
+        dialog.getDatePicker().setMinDate(System.currentTimeMillis());
+        dialog.getDatePicker().setMaxDate(System.currentTimeMillis() + (long) 29 * 24 * 60 * 60 * 1000);
         dialog.show();
     }
 

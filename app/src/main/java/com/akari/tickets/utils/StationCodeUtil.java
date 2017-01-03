@@ -12,7 +12,6 @@ import java.util.HashMap;
 public class StationCodeUtil {
 
     private static HashMap<String, String> name2CodeMap;
-    private static HashMap<String, String> name2Letter;
 
     public static void init(Context context) {
         String s1 = context.getResources().getString(R.string.s1);
@@ -27,11 +26,6 @@ public class StationCodeUtil {
         name2CodeMap = new HashMap<>();
         for (String s : stations) {
             name2CodeMap.put(s.split("\\|")[1], s.split("\\|")[2]);
-        }
-
-        name2Letter = new HashMap<>();
-        for (String s : stations) {
-            name2Letter.put(s.split("\\|")[1], s.split("\\|")[3].toUpperCase().substring(0, 1));
         }
     }
 

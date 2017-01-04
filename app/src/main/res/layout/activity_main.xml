@@ -63,6 +63,7 @@
             android:layout_marginLeft="32dp"
             android:lineSpacingExtra="8dp"
             android:textSize="14sp"
+            android:hint="选择乘车人"
             android:textColor="?android:attr/textColorPrimary"/>
     </LinearLayout>
     <View

@@ -6,11 +6,13 @@ import android.content.Intent;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.akari.tickets.R;
 import com.akari.tickets.adapter.Date2Adapter;
@@ -18,9 +20,11 @@ import com.akari.tickets.adapter.PassengersAdapter;
 import com.akari.tickets.adapter.SeatsAdapter;
 import com.akari.tickets.adapter.TrainsAdapter;
 import com.akari.tickets.beans.Passenger;
+import com.akari.tickets.beans.QueryParam;
 import com.akari.tickets.utils.DateUtil;
 import com.akari.tickets.utils.HttpUtil;
 import com.akari.tickets.utils.PassengerUtil;
+import com.akari.tickets.utils.QueryUtil;
 import com.akari.tickets.utils.StationCodeUtil;
 
 import org.json.JSONArray;
@@ -86,7 +90,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         chooseDate.setText(dateStr);
 
         trains = new ArrayList<>();
-        HttpUtil.get(getUrl(), new GetTrainCodeCallBack());
+        HttpUtil.get(getQueryParam().getUrl(), new GetTrainCodeCallBack());
     }
 
     @Override
@@ -114,11 +118,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 buildChooseDate2Dialog();
                 break;
             case R.id.button:
-                startActivity(new Intent(MainActivity.this, ChooseStationActivity.class));
+                if (preCheckThrough()) {
+                    Toast.makeText(MainActivity.this, "开始查询", Toast.LENGTH_SHORT).show();
+                    QueryUtil.startQueryLoop(getQueryParam());
+                }
                 break;
             default:
                 break;
         }
+    }
+
+    private boolean preCheckThrough() {
+        if (!TextUtils.isEmpty(choosePassengers.getText().toString())) {
+            if (!TextUtils.isEmpty(chooseTrains.getText().toString())) {
+                if (!TextUtils.isEmpty(chooseSeats.getText().toString())) {
+                    return true;
+                }
+                else {
+                    Toast.makeText(this, "请选择席别", Toast.LENGTH_SHORT).show();
+                }
+            }
+            else {
+                Toast.makeText(this, "请选择车次", Toast.LENGTH_SHORT).show();
+            }
+        }
+        else {
+            Toast.makeText(this, "请选择乘车人", Toast.LENGTH_SHORT).show();
+        }
+        return false;
     }
 
     @Override
@@ -129,7 +156,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     fromStation.setText(data.getStringExtra("station"));
                     chooseTrains.setText("");
                     chooseSeats.setText("");
-                    HttpUtil.get(getUrl(), new GetTrainCodeCallBack());
+                    HttpUtil.get(getQueryParam().getUrl(), new GetTrainCodeCallBack());
                 }
                 break;
             case GET_TO_STATION:
@@ -137,7 +164,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     toStation.setText(data.getStringExtra("station"));
                     chooseTrains.setText("");
                     chooseSeats.setText("");
-                    HttpUtil.get(getUrl(), new GetTrainCodeCallBack());
+                    HttpUtil.get(getQueryParam().getUrl(), new GetTrainCodeCallBack());
                 }
                 break;
             default:
@@ -145,15 +172,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private String getUrl() {
-        String url;
-        String from_station = StationCodeUtil.getName2CodeMap().get(fromStation.getText().toString());
-        String to_station = StationCodeUtil.getName2CodeMap().get(toStation.getText().toString());
-        String train_date = chooseDate.getText().toString();
-        String purpose_codes = PassengerUtil.getPassenger(choosePassengers.getText().toString().split(",")[0]).getPassenger_type_name();
-        url = "https://kyfw.12306.cn/otn/leftTicket/queryA?leftTicketDTO.train_date=" + train_date + "&leftTicketDTO.from_station=" + from_station
-                + "&leftTicketDTO.to_station=" + to_station + "&purpose_codes=" + purpose_codes;
-        return url;
+    private QueryParam getQueryParam() {
+        QueryParam queryParam = new QueryParam();
+        queryParam.setFrom_station(StationCodeUtil.getName2CodeMap().get(fromStation.getText().toString()));
+        queryParam.setTo_station(StationCodeUtil.getName2CodeMap().get(toStation.getText().toString()));
+        queryParam.setTrain_code(chooseTrains.getText().toString());
+        queryParam.setTrain_date(chooseDate.getText().toString());
+        queryParam.setSeats(chooseSeats.getText().toString().split(", "));
+        queryParam.setPurpose_codes(PassengerUtil.getPassenger(choosePassengers.getText().toString().split(",")[0]).getPassenger_type_name());
+        queryParam.setUrl("https://kyfw.12306.cn/otn/leftTicket/queryA?leftTicketDTO.train_date=" + queryParam.getTrain_date() + "&leftTicketDTO.from_station=" + queryParam.getFrom_station()
+                + "&leftTicketDTO.to_station=" + queryParam.getTo_station() + "&purpose_codes=" + queryParam.getPurpose_codes());
+
+        return queryParam;
     }
 
     private void buildChoosePassengersDialog() {
@@ -297,7 +327,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onDateSet(DatePicker view, int year, int month, int day) {
         String dateStr = DateUtil.getDateStr(year, month, day);
         chooseDate.setText(dateStr);
-        HttpUtil.get(getUrl(), new GetTrainCodeCallBack());
+        HttpUtil.get(getQueryParam().getUrl(), new GetTrainCodeCallBack());
     }
 
     private void buildChooseDate2Dialog() {
@@ -353,6 +383,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         public void onResponse(Call call, Response response) throws IOException {
             String json = response.body().string();
+            System.out.println(json);
             try {
                 JSONArray array = new JSONObject(json).getJSONArray("data");
                 trains.clear();

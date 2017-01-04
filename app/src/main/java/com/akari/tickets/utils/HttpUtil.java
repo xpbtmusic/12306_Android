@@ -2,6 +2,8 @@ package com.akari.tickets.utils;
 
 import com.zhy.http.okhttp.https.HttpsUtils;
 
+import java.util.concurrent.TimeUnit;
+
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -19,7 +21,10 @@ public class HttpUtil {
 
     private static void init() {
         HttpsUtils.SSLParams sslParams = HttpsUtils.getSslSocketFactory(null, null, null);
-        client = new OkHttpClient.Builder().sslSocketFactory(sslParams.sSLSocketFactory, sslParams.trustManager).build();
+        client = new OkHttpClient.Builder().connectTimeout(3000, TimeUnit.MILLISECONDS)
+                .retryOnConnectionFailure(true)
+                .sslSocketFactory(sslParams.sSLSocketFactory, sslParams.trustManager)
+                .build();
         init = true;
     }
 

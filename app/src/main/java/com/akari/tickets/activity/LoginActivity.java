@@ -130,6 +130,17 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
         }
     }
 
+    private void clearSelected() {
+        selected1.setVisibility(View.INVISIBLE);
+        selected2.setVisibility(View.INVISIBLE);
+        selected3.setVisibility(View.INVISIBLE);
+        selected4.setVisibility(View.INVISIBLE);
+        selected5.setVisibility(View.INVISIBLE);
+        selected6.setVisibility(View.INVISIBLE);
+        selected7.setVisibility(View.INVISIBLE);
+        selected8.setVisibility(View.INVISIBLE);
+    }
+
     private void addToList() {
         list = new ArrayList<>();
         list.add(selected1);
@@ -215,8 +226,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
                 String bigipServerotn = list.get(1).split(" ")[0];
                 HttpUtil.cookie = jsessionid + bigipServerotn;
             }
-            Random random = new Random();
-            HttpUtil.get("https://kyfw.12306.cn/otn/passcodeNew/getPassCodeNew?module=login&rand=sjrand&" + random.nextDouble(), new GetPassCodeNewCallback());
+            HttpUtil.get("https://kyfw.12306.cn/otn/passcodeNew/getPassCodeNew?module=login&rand=sjrand&" + new Random().nextDouble(), new GetPassCodeNewCallback());
         }
     }
 
@@ -270,6 +280,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
                         @Override
                         public void run() {
                             Toast.makeText(LoginActivity.this, "验证码错误", Toast.LENGTH_SHORT).show();
+                            HttpUtil.get("https://kyfw.12306.cn/otn/passcodeNew/getPassCodeNew?module=login&rand=sjrand&" + new Random().nextDouble(), new GetPassCodeNewCallback());
+                            clearSelected();
                         }
                     });
                 }
@@ -308,6 +320,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
                         @Override
                         public void run() {
                             Toast.makeText(LoginActivity.this, messages.split("\"")[1], Toast.LENGTH_LONG).show();
+                            HttpUtil.get("https://kyfw.12306.cn/otn/passcodeNew/getPassCodeNew?module=login&rand=sjrand&" + new Random().nextDouble(), new GetPassCodeNewCallback());
+                            clearSelected();
                         }
                     });
                 }

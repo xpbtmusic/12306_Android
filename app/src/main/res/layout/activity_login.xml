@@ -11,7 +11,7 @@
         android:id="@+id/username"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="32dp"
         android:hint="用户名"
         android:textSize="14sp"/>
     <EditText
@@ -28,14 +28,15 @@
         android:layout_width="293dp"
         android:layout_height="190dp"
         android:layout_below="@id/password"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="32dp"
         android:layout_centerHorizontal="true"/>
     <Button
         android:id="@+id/btn_login"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/captcha"
-        android:layout_marginTop="16dp"
+        android:background="@color/colorPrimary"
+        android:textColor="@android:color/white"
+        android:layout_alignParentBottom="true"
         android:textSize="14sp"
         android:text="登录"/>
 

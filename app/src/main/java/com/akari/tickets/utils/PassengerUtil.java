@@ -16,6 +16,7 @@ import java.util.List;
 public class PassengerUtil {
 
     private static List<Passenger> list;
+    public static String selectedPassenger;
 
     public static void savePassengers(String json) {
         list = new ArrayList<>();
@@ -28,6 +29,8 @@ public class PassengerUtil {
                 passenger = new Passenger();
                 passenger.setPassenger_name(object.getString("passenger_name"));
                 passenger.setIsUserSelf(object.getString("isUserSelf"));
+                passenger.setIdCard(object.getString("passenger_id_no"));
+                passenger.setPhoneNum(object.getString("mobile_no"));
                 if (object.getString("passenger_type_name").equals("成人")) {
                     passenger.setPassenger_type_name("ADULT");
                 }

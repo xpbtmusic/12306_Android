@@ -224,7 +224,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
             if (!list.isEmpty()) {
                 String jsessionid = list.get(0).split(" ")[0];
                 String bigipServerotn = list.get(1).split(" ")[0];
-                HttpUtil.cookie = jsessionid + bigipServerotn;
+                HttpUtil.cookie = jsessionid + "_jc_save_showIns=true;" + bigipServerotn;
             }
             HttpUtil.get("https://kyfw.12306.cn/otn/passcodeNew/getPassCodeNew?module=login&rand=sjrand&" + new Random().nextDouble(), new GetPassCodeNewCallback());
         }
@@ -248,7 +248,9 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
             List<String> list = response.headers("Set-Cookie");
             if (!list.isEmpty()) {
                 String currentCaptchaType = list.get(0).split(" ")[0];
-                HttpUtil.cookie = HttpUtil.cookie + currentCaptchaType;
+                if (!HttpUtil.cookie.contains("currentCaptchaType")) {
+                    HttpUtil.cookie = HttpUtil.cookie + currentCaptchaType;
+                }
             }
         }
     }
@@ -306,8 +308,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
 
                 if (!data.isNull("loginCheck") && data.getString("loginCheck").equals("Y")) {
                     String url = "https://kyfw.12306.cn/otn/login/userLogin";
-                    String nrf = response.header("Set-Cookie");
-                    HttpUtil.cookie = HttpUtil.cookie + nrf;
+                    String nrf = response.header("Set-Cookie").split(" ")[0];
+                    HttpUtil.cookie = nrf + HttpUtil.cookie;
 
                     FormBody.Builder builder = new FormBody.Builder();
                     builder.add("_json_att", "");

@@ -32,6 +32,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -53,6 +55,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final int GET_FROM_STATION = 1;
     private static final int GET_TO_STATION = 2;
     private static List<String> trains;
+    private static String back_strain_date;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,6 +91,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int day = calendar.get(Calendar.DAY_OF_MONTH);
         String dateStr = DateUtil.getDateStr(year, month, day);
         chooseDate.setText(dateStr);
+        back_strain_date = dateStr;
 
         trains = new ArrayList<>();
         HttpUtil.get(getQueryParam().getUrl(), new GetTrainCodeCallBack());
@@ -132,6 +136,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (!TextUtils.isEmpty(choosePassengers.getText().toString())) {
             if (!TextUtils.isEmpty(chooseTrains.getText().toString())) {
                 if (!TextUtils.isEmpty(chooseSeats.getText().toString())) {
+                    PassengerUtil.selectedPassenger = choosePassengers.getText().toString();
                     return true;
                 }
                 else {
@@ -174,14 +179,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private QueryParam getQueryParam() {
         QueryParam queryParam = new QueryParam();
-        queryParam.setFrom_station(StationCodeUtil.getName2CodeMap().get(fromStation.getText().toString()));
-        queryParam.setTo_station(StationCodeUtil.getName2CodeMap().get(toStation.getText().toString()));
+        queryParam.setFrom_station_code(StationCodeUtil.getName2CodeMap().get(fromStation.getText().toString()));
+        queryParam.setTo_station_code(StationCodeUtil.getName2CodeMap().get(toStation.getText().toString()));
+        queryParam.setFrom_station(fromStation.getText().toString());
+        queryParam.setTo_station(toStation.getText().toString());
         queryParam.setTrain_code(chooseTrains.getText().toString());
         queryParam.setTrain_date(chooseDate.getText().toString());
+        queryParam.setBack_train_date(back_strain_date);
         queryParam.setSeats(chooseSeats.getText().toString().split(", "));
         queryParam.setPurpose_codes(PassengerUtil.getPassenger(choosePassengers.getText().toString().split(",")[0]).getPassenger_type_name());
-        queryParam.setUrl("https://kyfw.12306.cn/otn/leftTicket/queryA?leftTicketDTO.train_date=" + queryParam.getTrain_date() + "&leftTicketDTO.from_station=" + queryParam.getFrom_station()
-                + "&leftTicketDTO.to_station=" + queryParam.getTo_station() + "&purpose_codes=" + queryParam.getPurpose_codes());
+        queryParam.setUrl("https://kyfw.12306.cn/otn/leftTicket/queryA?leftTicketDTO.train_date=" + queryParam.getTrain_date() + "&leftTicketDTO.from_station=" + queryParam.getFrom_station_code()
+                + "&leftTicketDTO.to_station=" + queryParam.getTo_station_code() + "&purpose_codes=" + queryParam.getPurpose_codes());
 
         return queryParam;
     }

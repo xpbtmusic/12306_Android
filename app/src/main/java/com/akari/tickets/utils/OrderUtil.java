@@ -4,7 +4,6 @@ import com.akari.tickets.beans.OrderParam;
 import com.akari.tickets.beans.Passenger;
 import com.akari.tickets.beans.QueryParam;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -24,6 +23,7 @@ import okhttp3.Response;
 public class OrderUtil {
 
     private static OrderParam orderParam;
+    public static String seat_type_codes;
 
     public static void submitOrder(String secretStr, QueryParam queryParam) {
         if (!HttpUtil.cookie.contains("_jc_save_fromStation")) {
@@ -34,7 +34,7 @@ public class OrderUtil {
 
         String url = "https://kyfw.12306.cn/otn/leftTicket/submitOrderRequest";
         FormBody.Builder builder = new FormBody.Builder();
-        builder.add("secretStr", secretStr.replaceAll("%2F", "/").replaceAll("%2B", "+").replaceAll("%0A", "\n"));
+        builder.add("secretStr", secretStr.replaceAll("%2F", "/").replaceAll("%2B", "+").replaceAll("%0A", "\n").replaceAll("%3D", "="));
         builder.add("train_date", queryParam.getTrain_date());
         builder.add("back_train_date", queryParam.getBack_train_date());
         builder.add("tour_flag", "dc");
@@ -102,7 +102,6 @@ public class OrderUtil {
 
             try {
                 JSONObject object = new JSONObject(s.split("ticketInfoForPassengerForm=")[1].split(";")[0]);
-                System.out.println("OK!");
                 getOrderParam(object, orderParam);
 
                 String url = "https://kyfw.12306.cn/otn/confirmPassenger/checkOrderInfo";
@@ -182,9 +181,7 @@ public class OrderUtil {
     private static void getOrderParam(JSONObject object, OrderParam orderParam) {
         try {
             StringBuilder passengerTicketStr = new StringBuilder();
-            JSONObject limitBuySeatTicketDTO = object.getJSONObject("limitBuySeatTicketDTO");
-            JSONArray seat_type_codes = limitBuySeatTicketDTO.getJSONArray("seat_type_codes");
-            passengerTicketStr.append(seat_type_codes.getJSONObject(seat_type_codes.length() - 1).getString("id"));
+            passengerTicketStr.append(seat_type_codes);
             passengerTicketStr.append(",0,1,");
 
             Passenger passenger = PassengerUtil.getPassenger(PassengerUtil.selectedPassenger);

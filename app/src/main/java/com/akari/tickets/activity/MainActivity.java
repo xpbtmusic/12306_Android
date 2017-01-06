@@ -123,7 +123,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.button:
                 if (preCheckThrough()) {
-                    Toast.makeText(MainActivity.this, "开始查询", Toast.LENGTH_SHORT).show();
+                    QueryUtil.get = false;
                     QueryUtil.startQueryLoop(getQueryParam());
                 }
                 break;

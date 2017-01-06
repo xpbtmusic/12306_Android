@@ -21,10 +21,14 @@ import okhttp3.Response;
 public class QueryUtil {
 
     private static QueryParam queryParam;
+    public static boolean get = false;
+    private static MyThread thread;
 
     public static void startQueryLoop(QueryParam queryParam) {
         QueryUtil.queryParam = queryParam;
-        HttpUtil.get(queryParam.getUrl(), new LoopCallBack());
+        HttpUtil.get(QueryUtil.queryParam.getUrl(), new LoopCallBack());
+        thread = new MyThread();
+        thread.start();
     }
 
     private static class LoopCallBack implements Callback {
@@ -36,7 +40,7 @@ public class QueryUtil {
         @Override
         public void onResponse(Call call, Response response) throws IOException {
             String json = response.body().string();
-            System.out.println(json);
+            System.out.println("正在查询...");
             JSONObject object;
             JSONObject object1;
             String[] seats;
@@ -58,40 +62,63 @@ public class QueryUtil {
                         }
                     }
                 }
-            } catch (JSONException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
     }
 
-    private static void querySeats(JSONObject object, String seat, String secretStr) throws JSONException {
+    private static synchronized void querySeats(JSONObject object, String seat, String secretStr) throws JSONException, InterruptedException {
         switch (seat) {
             case "软卧":
                 if (!object.getString("rw_num").equals("无") && !object.getString("rw_num").equals("--")) {
+                    get = true;
                     System.out.println("正在抢软卧...");
+                    OrderUtil.seat_type_codes = "4";
                     OrderUtil.submitOrder(secretStr, queryParam);
                 }
                 break;
             case "硬卧":
-                if (!object.getString("yw_num").equals("无") && !object.getString("rw_num").equals("--")) {
+                if (!object.getString("yw_num").equals("无") && !object.getString("yw_num").equals("--")) {
+                    get = true;
                     System.out.println("正在抢硬卧...");
+                    OrderUtil.seat_type_codes = "3";
                     OrderUtil.submitOrder(secretStr, queryParam);
                 }
                 break;
             case "硬座":
-                if (!object.getString("yz_num").equals("无") && !object.getString("rw_num").equals("--")) {
+                if (!object.getString("yz_num").equals("无") && !object.getString("yz_num").equals("--")) {
+                    get = true;
                     System.out.println("正在抢硬座...");
+                    OrderUtil.seat_type_codes = "1";
                     OrderUtil.submitOrder(secretStr, queryParam);
                 }
                 break;
             case "无座":
-                if (!object.getString("wz_num").equals("无") && !object.getString("rw_num").equals("--")) {
+                if (!object.getString("wz_num").equals("无") && !object.getString("wz_num").equals("--")) {
+                    get = true;
                     System.out.println("正在抢无座...");
+                    OrderUtil.seat_type_codes = "1";
                     OrderUtil.submitOrder(secretStr, queryParam);
                 }
                 break;
             default:
                 break;
+        }
+    }
+
+    private static class MyThread extends Thread {
+        @Override
+        public void run() {
+            while (!get) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                HttpUtil.get(QueryUtil.queryParam.getUrl(), new LoopCallBack());
+            }
+            System.out.println("打开12306看看");
         }
     }
 }

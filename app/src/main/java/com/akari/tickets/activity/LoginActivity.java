@@ -248,7 +248,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
             List<String> list = response.headers("Set-Cookie");
             if (!list.isEmpty()) {
                 String currentCaptchaType = list.get(0).split(" ")[0];
-                if (!HttpUtil.cookie.contains("currentCaptchaType")) {
+                if (!HttpUtil.cookie.contains("current_captcha_type")) {
                     HttpUtil.cookie = HttpUtil.cookie + currentCaptchaType;
                 }
             }

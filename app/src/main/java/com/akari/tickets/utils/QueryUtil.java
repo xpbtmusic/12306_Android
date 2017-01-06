@@ -23,12 +23,42 @@ public class QueryUtil {
     private static QueryParam queryParam;
     public static boolean get = false;
     private static MyThread thread;
+    private static int n = 1;
 
     public static void startQueryLoop(QueryParam queryParam) {
-        QueryUtil.queryParam = queryParam;
-        HttpUtil.get(QueryUtil.queryParam.getUrl(), new LoopCallBack());
-        thread = new MyThread();
-        thread.start();
+        if (QueryUtil.queryParam == null) {
+            QueryUtil.queryParam = queryParam;
+        }
+//        String url;
+//        if (!queryParam.getDate2()[0].equals("")) {
+//            for (int i = -1; i < queryParam.getDate2().length; i++) {
+//                if (get) {
+//                    break;
+//                }
+//                if (i == -1) {
+//                    url = "https://kyfw.12306.cn/otn/leftTicket/queryA?leftTicketDTO.train_date=" + queryParam.getTrain_date() + "&leftTicketDTO.from_station=" + queryParam.getFrom_station_code()
+//                            + "&leftTicketDTO.to_station=" + queryParam.getTo_station_code() + "&purpose_codes=" + queryParam.getPurpose_codes();
+//                }
+//                else {
+//                    url = "https://kyfw.12306.cn/otn/leftTicket/queryA?leftTicketDTO.train_date=" + queryParam.getDate2()[i] + "&leftTicketDTO.from_station=" + queryParam.getFrom_station_code()
+//                            + "&leftTicketDTO.to_station=" + queryParam.getTo_station_code() + "&purpose_codes=" + queryParam.getPurpose_codes();
+//                }
+//                HttpUtil.get(url, new LoopCallBack());
+//                try {
+//                    Thread.sleep(500);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
+//        else {
+            HttpUtil.get(queryParam.getUrl(), new LoopCallBack());
+//        }
+
+        if (thread == null) {
+            thread = new MyThread();
+            thread.start();
+        }
     }
 
     private static class LoopCallBack implements Callback {
@@ -40,7 +70,7 @@ public class QueryUtil {
         @Override
         public void onResponse(Call call, Response response) throws IOException {
             String json = response.body().string();
-            System.out.println("正在查询...");
+            System.out.println("正在查询..." + n++);
             JSONObject object;
             JSONObject object1;
             String[] seats;
@@ -73,6 +103,9 @@ public class QueryUtil {
             case "软卧":
                 if (!object.getString("rw_num").equals("无") && !object.getString("rw_num").equals("--")) {
                     get = true;
+                    if (thread != null) {
+                        thread.interrupt();
+                    }
                     System.out.println("正在抢软卧...");
                     OrderUtil.seat_type_codes = "4";
                     OrderUtil.submitOrder(secretStr, queryParam);
@@ -81,6 +114,9 @@ public class QueryUtil {
             case "硬卧":
                 if (!object.getString("yw_num").equals("无") && !object.getString("yw_num").equals("--")) {
                     get = true;
+                    if (thread != null) {
+                        thread.interrupt();
+                    }
                     System.out.println("正在抢硬卧...");
                     OrderUtil.seat_type_codes = "3";
                     OrderUtil.submitOrder(secretStr, queryParam);
@@ -89,6 +125,9 @@ public class QueryUtil {
             case "硬座":
                 if (!object.getString("yz_num").equals("无") && !object.getString("yz_num").equals("--")) {
                     get = true;
+                    if (thread != null) {
+                        thread.interrupt();
+                    }
                     System.out.println("正在抢硬座...");
                     OrderUtil.seat_type_codes = "1";
                     OrderUtil.submitOrder(secretStr, queryParam);
@@ -97,6 +136,9 @@ public class QueryUtil {
             case "无座":
                 if (!object.getString("wz_num").equals("无") && !object.getString("wz_num").equals("--")) {
                     get = true;
+                    if (thread != null) {
+                        thread.interrupt();
+                    }
                     System.out.println("正在抢无座...");
                     OrderUtil.seat_type_codes = "1";
                     OrderUtil.submitOrder(secretStr, queryParam);
@@ -111,14 +153,37 @@ public class QueryUtil {
         @Override
         public void run() {
             while (!get) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                String url;
+                if (!queryParam.getDate2()[0].equals("")) {
+                    for (int i = -1; i < queryParam.getDate2().length; i++) {
+                        if (get) {
+                            break;
+                        }
+                        if (i == -1) {
+                            url = "https://kyfw.12306.cn/otn/leftTicket/queryA?leftTicketDTO.train_date=" + queryParam.getTrain_date() + "&leftTicketDTO.from_station=" + queryParam.getFrom_station_code()
+                                    + "&leftTicketDTO.to_station=" + queryParam.getTo_station_code() + "&purpose_codes=" + queryParam.getPurpose_codes();
+                        }
+                        else {
+                            url = "https://kyfw.12306.cn/otn/leftTicket/queryA?leftTicketDTO.train_date=" + queryParam.getDate2()[i] + "&leftTicketDTO.from_station=" + queryParam.getFrom_station_code()
+                                    + "&leftTicketDTO.to_station=" + queryParam.getTo_station_code() + "&purpose_codes=" + queryParam.getPurpose_codes();
+                        }
+                        HttpUtil.get(url, new LoopCallBack());
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
                 }
-                HttpUtil.get(QueryUtil.queryParam.getUrl(), new LoopCallBack());
+                else {
+                    HttpUtil.get(queryParam.getUrl(), new LoopCallBack());
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
-            System.out.println("打开12306看看");
         }
     }
 }

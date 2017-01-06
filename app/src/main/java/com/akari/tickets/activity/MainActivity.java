@@ -187,6 +187,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         queryParam.setTrain_date(chooseDate.getText().toString());
         queryParam.setBack_train_date(back_strain_date);
         queryParam.setSeats(chooseSeats.getText().toString().split(", "));
+        queryParam.setDate2(chooseDate2.getText().toString().split(", "));
         queryParam.setPurpose_codes(PassengerUtil.getPassenger(choosePassengers.getText().toString().split(",")[0]).getPassenger_type_name());
         queryParam.setUrl("https://kyfw.12306.cn/otn/leftTicket/queryA?leftTicketDTO.train_date=" + queryParam.getTrain_date() + "&leftTicketDTO.from_station=" + queryParam.getFrom_station_code()
                 + "&leftTicketDTO.to_station=" + queryParam.getTo_station_code() + "&purpose_codes=" + queryParam.getPurpose_codes());

@@ -25,7 +25,7 @@ public class OrderUtil {
     private static OrderParam orderParam;
     public static String seat_type_codes;
 
-    public static void submitOrder(String secretStr, QueryParam queryParam) {
+    public static synchronized void submitOrder(String secretStr, QueryParam queryParam) {
         if (!HttpUtil.cookie.contains("_jc_save_fromStation")) {
             HttpUtil.cookie = HttpUtil.cookie + ";" + "_jc_save_fromStation=" + encodeStr(queryParam.getFrom_station()) + "%2C" + queryParam.getFrom_station_code()
                     + ";" + "_jc_save_toStation=" + encodeStr(queryParam.getTo_station()) + "%2C" + queryParam.getTo_station_code() + ";" + "_jc_save_fromDate="

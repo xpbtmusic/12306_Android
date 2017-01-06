@@ -15,6 +15,7 @@ public class QueryParam {
     private String back_train_date;
     private String purpose_codes;
     private String[] seats;
+    private String[] date2;
     private String passenger;
 
     public String getUrl() {
@@ -95,6 +96,14 @@ public class QueryParam {
 
     public void setSeats(String[] seats) {
         this.seats = seats;
+    }
+
+    public String[] getDate2() {
+        return date2;
+    }
+
+    public void setDate2(String[] date2) {
+        this.date2 = date2;
     }
 
     public String getPassenger() {

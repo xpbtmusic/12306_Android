@@ -48,8 +48,8 @@
         android:id="@+id/selected1"
         android:layout_width="16dp"
         android:layout_height="16dp"
-        android:layout_below="@id/password"
-        android:layout_marginTop="122dp"
+        android:layout_alignTop="@id/captcha"
+        android:layout_marginTop="90dp"
         android:layout_marginLeft="72dp"
         android:visibility="invisible"
         android:src="@mipmap/selected" />
@@ -81,36 +81,36 @@
         android:id="@+id/selected5"
         android:layout_width="16dp"
         android:layout_height="16dp"
-        android:layout_below="@id/password"
+        android:layout_alignBottom="@id/captcha"
+        android:layout_marginBottom="12dp"
         android:layout_alignLeft="@id/selected1"
-        android:layout_marginTop="194dp"
         android:visibility="invisible"
         android:src="@mipmap/selected"/>
     <ImageView
         android:id="@+id/selected6"
         android:layout_width="16dp"
         android:layout_height="16dp"
-        android:layout_below="@id/password"
+        android:layout_alignBottom="@id/captcha"
+        android:layout_marginBottom="12dp"
         android:layout_alignLeft="@id/selected2"
-        android:layout_marginTop="194dp"
         android:visibility="invisible"
         android:src="@mipmap/selected"/>
     <ImageView
         android:id="@+id/selected7"
         android:layout_width="16dp"
         android:layout_height="16dp"
-        android:layout_below="@id/password"
+        android:layout_alignBottom="@id/captcha"
+        android:layout_marginBottom="12dp"
         android:layout_alignLeft="@id/selected3"
-        android:layout_marginTop="194dp"
         android:visibility="invisible"
         android:src="@mipmap/selected"/>
     <ImageView
         android:id="@+id/selected8"
         android:layout_width="16dp"
         android:layout_height="16dp"
-        android:layout_below="@id/password"
+        android:layout_alignBottom="@id/captcha"
+        android:layout_marginBottom="12dp"
         android:layout_alignLeft="@id/selected4"
-        android:layout_marginTop="194dp"
         android:visibility="invisible"
         android:src="@mipmap/selected"/>
 </RelativeLayout>

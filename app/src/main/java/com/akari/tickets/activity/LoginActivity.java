@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
@@ -50,6 +51,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
     private String password;
     private String randCode;
 
+    private float density;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,6 +75,10 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
         btnLogin.setOnClickListener(this);
 
         HttpUtil.get("https://kyfw.12306.cn/otn/login/init", new InitCallback());
+
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        density = metrics.density;
     }
 
     @Override
@@ -79,8 +86,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
         switch (v.getId()) {
             case R.id.captcha:
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    float x = event.getX() / 3;
-                    float y = (event.getY() - 90) / 3;
+                    float x = event.getX() / density;
+                    float y = event.getY() / density - 30;
                     changeSelectedStatus(x, y);
                 }
                 break;
@@ -221,10 +228,16 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
         @Override
         public void onResponse(Call call, Response response) throws IOException {
             List<String> list = response.headers("Set-Cookie");
+//            if (!list.isEmpty()) {
+//                String jsessionid = list.get(0).split(" ")[0];
+//                String bigipServerotn = list.get(1).split(" ")[0];
+//                HttpUtil.cookie = jsessionid + "_jc_save_showIns=true;" + bigipServerotn;
+//            }
             if (!list.isEmpty()) {
-                String jsessionid = list.get(0).split(" ")[0];
-                String bigipServerotn = list.get(1).split(" ")[0];
-                HttpUtil.cookie = jsessionid + "_jc_save_showIns=true;" + bigipServerotn;
+                for (String s : list) {
+                    HttpUtil.cookie = HttpUtil.cookie + s.split(" ")[0];
+                }
+                HttpUtil.cookie = HttpUtil.cookie + "_jc_save_showIns=true;";
             }
             HttpUtil.get("https://kyfw.12306.cn/otn/passcodeNew/getPassCodeNew?module=login&rand=sjrand&" + new Random().nextDouble(), new GetPassCodeNewCallback());
         }
@@ -263,8 +276,9 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
 
         @Override
         public void onResponse(Call call, Response response) throws IOException {
+            String json = response.body().string();
             try {
-                JSONObject object = new JSONObject(response.body().string());
+                JSONObject object = new JSONObject(json);
                 String result = object.getJSONObject("data").getString("result");
                 if (result.equals("1")) {
                     String url = "https://kyfw.12306.cn/otn/login/loginAysnSuggest";
@@ -308,7 +322,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
 
                 if (!data.isNull("loginCheck") && data.getString("loginCheck").equals("Y")) {
                     String url = "https://kyfw.12306.cn/otn/login/userLogin";
-                    String nrf = response.header("Set-Cookie").split(" ")[0];
+                    String nrf = response.header("Set-Cookie", "").split(" ")[0];
                     HttpUtil.cookie = nrf + HttpUtil.cookie;
 
                     FormBody.Builder builder = new FormBody.Builder();

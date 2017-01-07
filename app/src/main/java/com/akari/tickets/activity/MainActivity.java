@@ -1,10 +1,10 @@
 package com.akari.tickets.activity;
 
-import android.app.DatePickerDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -25,6 +25,7 @@ import com.akari.tickets.adapter.SeatsAdapter;
 import com.akari.tickets.adapter.TrainsAdapter;
 import com.akari.tickets.beans.Passenger;
 import com.akari.tickets.beans.QueryParam;
+import com.akari.tickets.fragment.DatePickerFragment;
 import com.akari.tickets.utils.DateUtil;
 import com.akari.tickets.utils.HttpUtil;
 import com.akari.tickets.utils.PassengerUtil;
@@ -44,7 +45,7 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, DatePickerDialog.OnDateSetListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private TextView fromStation;
     private TextView toStation;
@@ -343,25 +344,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void buildChooseDateDialog() {
-//        DialogFragment fragment = new DatePickerFragment();
-//        fragment.show(getSupportFragmentManager(), "datePicker");
-        String date = chooseDate.getText().toString();
-        int year = Integer.parseInt(date.split("-")[0]);
-        int month = Integer.parseInt(date.split("-")[1]);
-        int day = Integer.parseInt(date.split("-")[2]);
-        DatePickerDialog dialog = new DatePickerDialog(MainActivity.this, this, year, month - 1, day);
-        dialog.getDatePicker().setMinDate(System.currentTimeMillis());
-        dialog.getDatePicker().setMaxDate(System.currentTimeMillis() + (long) 29 * 24 * 60 * 60 * 1000);
-        dialog.show();
+        DialogFragment fragment = new DatePickerFragment();
+        fragment.show(getSupportFragmentManager(), "datePicker");
+//        String date = chooseDate.getText().toString();
+//        int year = Integer.parseInt(date.split("-")[0]);
+//        int month = Integer.parseInt(date.split("-")[1]);
+//        int day = Integer.parseInt(date.split("-")[2]);
+//        DatePickerDialog dialog = new DatePickerDialog(MainActivity.this, this, year, month - 1, day);
+//        dialog.getDatePicker().setMinDate(System.currentTimeMillis());
+//        dialog.getDatePicker().setMaxDate(System.currentTimeMillis() + (long) 29 * 24 * 60 * 60 * 1000);
+//        dialog.show();
     }
 
-    @Override
-    public void onDateSet(DatePicker view, int year, int month, int day) {
-        String dateStr = DateUtil.getDateStr(year, month, day);
-        chooseDate.setText(dateStr);
-        chooseDate2.setText("");
-        HttpUtil.get(getQueryParam().getUrl(), new GetTrainCodeCallBack());
-    }
+//    @Override
+//    public void onDateSet(DatePicker view, int year, int month, int day) {
+//        String dateStr = DateUtil.getDateStr(year, month, day);
+//        chooseDate.setText(dateStr);
+//        chooseDate2.setText("");
+//        HttpUtil.get(getQueryParam().getUrl(), new GetTrainCodeCallBack());
+//    }
 
     private void buildChooseDate2Dialog() {
         String date = chooseDate.getText().toString();
@@ -463,7 +464,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void run() {
                 while (!QueryUtil.end) {
-
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
                 NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
                 Notification notification = new Notification.Builder(MainActivity.this)

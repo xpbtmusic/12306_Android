@@ -92,6 +92,13 @@
             android:textSize="14sp"
             android:hint="选择车次"
             android:textColor="?android:attr/textColorPrimary"/>
+        <ImageView
+            android:id="@+id/refresh"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:layout_gravity="center"
+            android:src="@mipmap/ic_refresh_black_24dp"/>
     </LinearLayout>
     <View
         android:layout_width="match_parent"
@@ -174,17 +181,33 @@
     </LinearLayout>
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp">
+        <ScrollView
+            android:id="@+id/scroll_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_above="@+id/button"
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp">
+            <TextView
+                android:id="@+id/log"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:paddingLeft="56dp"/>
+        </ScrollView>
         <Button
-            android:id="@+id/button"
+            android:id="@id/button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/colorPrimary"
             android:layout_alignParentBottom="true"
-            android:layout_margin="16dp"
-            android:padding="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
             android:textSize="14sp"
             android:textColor="#FFFFFF"
-            android:text="查询"/>
+            android:text="开始查询"/>
     </RelativeLayout>
 </LinearLayout>

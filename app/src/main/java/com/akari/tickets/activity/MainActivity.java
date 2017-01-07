@@ -1,16 +1,24 @@
 package com.akari.tickets.activity;
 
 import android.app.DatePickerDialog;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
+import android.os.Handler;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.DatePicker;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,6 +39,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -56,6 +65,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final int GET_TO_STATION = 2;
     private static List<String> trains;
     private static String back_strain_date;
+    private TextView logText;
+    private ScrollView scrollView;
+    private ImageView refresh;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +82,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         chooseDate = (TextView) findViewById(R.id.choose_date);
         chooseDate2 = (TextView) findViewById(R.id.choose_date2);
         button = (Button) findViewById(R.id.button);
+        logText = (TextView) findViewById(R.id.log);
+        scrollView = (ScrollView) findViewById(R.id.scroll_view);
+        refresh = (ImageView) findViewById(R.id.refresh);
         loadDefaultData();
 
         fromStation.setOnClickListener(this);
@@ -80,6 +95,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         chooseDate.setOnClickListener(this);
         chooseDate2.setOnClickListener(this);
         button.setOnClickListener(this);
+        refresh.setOnClickListener(this);
+
+        checkIfGet();
     }
 
     private void loadDefaultData() {
@@ -123,9 +141,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.button:
                 if (preCheckThrough()) {
-                    QueryUtil.get = false;
-                    QueryUtil.startQueryLoop(getQueryParam());
+                    if (button.getText().toString().equals("开始查询")) {
+                        QueryUtil.get = false;
+                        button.setText("停止查询");
+                        QueryUtil.startQueryLoop(getQueryParam());
+                        getLog();
+                    }
+                    else {
+                        QueryUtil.get = true;
+                        button.setText("开始查询");
+                        QueryUtil.thread = null;
+                    }
                 }
+                break;
+            case R.id.refresh:
+                HttpUtil.get(getQueryParam().getUrl(), new GetTrainCodeCallBack());
                 break;
             default:
                 break;
@@ -336,6 +366,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onDateSet(DatePicker view, int year, int month, int day) {
         String dateStr = DateUtil.getDateStr(year, month, day);
         chooseDate.setText(dateStr);
+        chooseDate2.setText("");
         HttpUtil.get(getQueryParam().getUrl(), new GetTrainCodeCallBack());
     }
 
@@ -405,5 +436,51 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 e.printStackTrace();
             }
         }
+    }
+
+    private void getLog() {
+        new Thread() {
+            @Override
+            public void run() {
+                while (!QueryUtil.end) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (!QueryUtil.log.contains("正在抢")) {
+                                logText.append(QueryUtil.log);
+                                scrollView.fullScroll(View.FOCUS_DOWN);
+                            }
+                        }
+                    });
+                    try {
+                        Thread.sleep(1000);
+                        if (button.getText().toString().equals("开始查询")) {
+                            break;
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }.start();
+    }
+
+    private void checkIfGet() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (!QueryUtil.end) {
+
+                }
+                NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                Notification notification = new Notification.Builder(MainActivity.this)
+                        .setContentTitle("Tickets")
+                        .setContentText("打开12306看看")
+                        .setSmallIcon(R.mipmap.ic_launcher)
+                        .setDefaults(Notification.DEFAULT_ALL)
+                        .build();
+                manager.notify(1, notification);
+            }
+        }).start();
     }
 }

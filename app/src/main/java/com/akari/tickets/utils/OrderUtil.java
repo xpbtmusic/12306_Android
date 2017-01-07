@@ -165,8 +165,13 @@ public class OrderUtil {
                                 JSONObject data = new JSONObject(json).getJSONObject("data");
                                 if (data.getBoolean("submitStatus")) {
                                     System.out.println("打开12306看看");
+                                    QueryUtil.log = "打开12306看看\n";
+                                    Thread.sleep(1000);
+                                    QueryUtil.end = true;
                                 }
                             } catch (JSONException e) {
+                                e.printStackTrace();
+                            } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
                         }

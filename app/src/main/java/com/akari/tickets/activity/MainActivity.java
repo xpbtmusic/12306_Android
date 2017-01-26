@@ -346,23 +346,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void buildChooseDateDialog() {
         DialogFragment fragment = new DatePickerFragment();
         fragment.show(getSupportFragmentManager(), "datePicker");
-//        String date = chooseDate.getText().toString();
-//        int year = Integer.parseInt(date.split("-")[0]);
-//        int month = Integer.parseInt(date.split("-")[1]);
-//        int day = Integer.parseInt(date.split("-")[2]);
-//        DatePickerDialog dialog = new DatePickerDialog(MainActivity.this, this, year, month - 1, day);
-//        dialog.getDatePicker().setMinDate(System.currentTimeMillis());
-//        dialog.getDatePicker().setMaxDate(System.currentTimeMillis() + (long) 29 * 24 * 60 * 60 * 1000);
-//        dialog.show();
     }
-
-//    @Override
-//    public void onDateSet(DatePicker view, int year, int month, int day) {
-//        String dateStr = DateUtil.getDateStr(year, month, day);
-//        chooseDate.setText(dateStr);
-//        chooseDate2.setText("");
-//        HttpUtil.get(getQueryParam().getUrl(), new GetTrainCodeCallBack());
-//    }
 
     private void buildChooseDate2Dialog() {
         String date = chooseDate.getText().toString();

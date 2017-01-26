@@ -30,6 +30,7 @@ public class DatePickerFragment extends DialogFragment implements DatePickerDial
         DatePickerDialog dialog = new DatePickerDialog(getContext(), this, year, month - 1, day);
         dialog.getDatePicker().setMinDate(System.currentTimeMillis());
         dialog.getDatePicker().setMaxDate(System.currentTimeMillis() + (long) 29 * 24 * 60 * 60 * 1000);
+        dialog.setTitle(null);
 
         return dialog;
     }

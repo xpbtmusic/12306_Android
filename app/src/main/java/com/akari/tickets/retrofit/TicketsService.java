@@ -1,4 +1,4 @@
-package com.akari.tickets.retrofitServices;
+package com.akari.tickets.retrofit;
 
 import com.akari.tickets.beans.CheckRandCodeResponse;
 import com.akari.tickets.beans.CookieResponse;

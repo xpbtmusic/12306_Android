@@ -1,8 +1,6 @@
 package com.akari.tickets.retrofit;
 
-import com.akari.tickets.beans.CheckRandCodeResponse;
-import com.akari.tickets.beans.LoginSuggestResponse;
-
+import io.reactivex.Observable;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Field;
@@ -17,7 +15,7 @@ import retrofit2.http.Query;
 
 public interface TicketsService {
     @GET("login/init")
-    Call<ResponseBody> loginInit();
+    Observable<ResponseBody> loginInit();
 
     @GET("passcodeNew/getPassCodeNew")
     Call<ResponseBody> getPassCode(@Query("module") String module, @Query("rand") String rand);

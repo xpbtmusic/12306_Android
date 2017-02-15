@@ -2,6 +2,7 @@ package com.akari.tickets.retrofit;
 
 import com.akari.tickets.retrofit.interceptor.AddCookieInterceptor;
 import com.akari.tickets.retrofit.interceptor.ReceiveCookieInterceptor;
+import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import com.zhy.http.okhttp.https.HttpsUtils;
 
 import java.util.concurrent.TimeUnit;
@@ -47,6 +48,7 @@ public class RetrofitManager {
         if (retrofit == null) {
             retrofit = new Retrofit.Builder()
                     .baseUrl("https://kyfw.12306.cn/otn/")
+                    .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                     .client(getClient())
                     .build();
         }
@@ -56,6 +58,7 @@ public class RetrofitManager {
     public TicketsService getService(Converter.Factory factory) {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://kyfw.12306.cn/otn/")
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .client(getClient())
                 .addConverterFactory(factory)
                 .build();

@@ -30,6 +30,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.FormBody;
@@ -483,33 +487,73 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
 
     private void loginInit() {
         final TicketsService service = RetrofitManager.getInstance().getService();
-        service.loginInit().enqueue(new retrofit2.Callback<ResponseBody>() {
-            @Override
-            public void onResponse(retrofit2.Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
-                service.getPassCode("login", "sjrand").enqueue(new retrofit2.Callback<ResponseBody>() {
+//        service.loginInit().enqueue(new retrofit2.Callback<ResponseBody>() {
+//            @Override
+//            public void onResponse(retrofit2.Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+//                service.getPassCode("login", "sjrand").enqueue(new retrofit2.Callback<ResponseBody>() {
+//                    @Override
+//                    public void onResponse(retrofit2.Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+//                        final Bitmap bitmap = BitmapFactory.decodeStream(response.body().byteStream());
+//                        runOnUiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                captcha.setImageBitmap(bitmap);
+//                            }
+//                        });
+//                    }
+//
+//                    @Override
+//                    public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
+//
+//                    }
+//                });
+//            }
+//
+//            @Override
+//            public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
+//                t.printStackTrace();
+//            }
+//        });
+        service.loginInit()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<ResponseBody>() {
                     @Override
-                    public void onResponse(retrofit2.Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
-                        final Bitmap bitmap = BitmapFactory.decodeStream(response.body().byteStream());
-                        runOnUiThread(new Runnable() {
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(ResponseBody value) {
+                        service.getPassCode("login", "sjrand").enqueue(new retrofit2.Callback<ResponseBody>() {
                             @Override
-                            public void run() {
-                                captcha.setImageBitmap(bitmap);
+                            public void onResponse(retrofit2.Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+                                final Bitmap bitmap = BitmapFactory.decodeStream(response.body().byteStream());
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        captcha.setImageBitmap(bitmap);
+                                    }
+                                });
+                            }
+
+                            @Override
+                            public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
+
                             }
                         });
                     }
 
                     @Override
-                    public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
 
                     }
                 });
-            }
-
-            @Override
-            public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
-                t.printStackTrace();
-            }
-        });
     }
 
 }

@@ -1,7 +1,6 @@
 package com.akari.tickets.retrofit;
 
 import com.akari.tickets.beans.CheckRandCodeResponse;
-import com.akari.tickets.beans.CookieResponse;
 import com.akari.tickets.beans.LoginSuggestResponse;
 
 import okhttp3.ResponseBody;
@@ -18,18 +17,18 @@ import retrofit2.http.Query;
 
 public interface TicketsService {
     @GET("login/init")
-    Call<CookieResponse> getCookie();
+    Call<ResponseBody> loginInit();
 
     @GET("passcodeNew/getPassCodeNew")
-    Call<ResponseBody> passCode(@Query("module") String module, @Query("rand") String rand);
+    Call<ResponseBody> getPassCode(@Query("module") String module, @Query("rand") String rand);
 
     @FormUrlEncoded
     @POST("passcodeNew/checkRandCodeAnsyn")
-    Call<CheckRandCodeResponse> checkRandCode(@Field("randCode") String randCode, @Field("rand") String rand);
+    Call<ResponseBody> checkRandCode(@Field(value = "randCode", encoded = true) String randCode, @Field("rand") String rand);
 
     @FormUrlEncoded
     @POST("login/loginAysnSuggest")
-    Call<LoginSuggestResponse> loginSuggest(@Field("loginUserDTO.user_name") String username, @Field("userDTO.password") String password, @Field("randCode") String randCode);
+    Call<ResponseBody> loginSuggest(@Field("loginUserDTO.user_name") String username, @Field("userDTO.password") String password, @Field(value = "randCode", encoded = true) String randCode);
 
     @FormUrlEncoded
     @POST("login/userLogin")

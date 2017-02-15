@@ -15,9 +15,12 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.akari.tickets.R;
+import com.akari.tickets.retrofit.RetrofitManager;
+import com.akari.tickets.retrofit.TicketsService;
 import com.akari.tickets.utils.HttpUtil;
 import com.akari.tickets.utils.PassengerUtil;
 import com.akari.tickets.utils.StationCodeUtil;
+import com.akari.tickets.utils.ToastUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -31,6 +34,7 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.FormBody;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 public class LoginActivity extends AppCompatActivity implements View.OnTouchListener, View.OnClickListener {
 
@@ -74,7 +78,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
         captcha.setOnTouchListener(this);
         btnLogin.setOnClickListener(this);
 
-        HttpUtil.get("https://kyfw.12306.cn/otn/login/init", new InitCallback());
+//        HttpUtil.get("https://kyfw.12306.cn/otn/login/init", new InitCallback());
+        loginInit();
 
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
@@ -186,10 +191,98 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
         }
         return true;
     }
-
+/**************************************************************************************************************************/
     private void checkRandCodeAndUser() {
-        String url = "https://kyfw.12306.cn/otn/passcodeNew/checkRandCodeAnsyn?randCode=" + randCode + "&rand=sjrand";
-        HttpUtil.get(url, new CheckRandCodeCallback());
+//        String url = "https://kyfw.12306.cn/otn/passcodeNew/checkRandCodeAnsyn?randCode=" + randCode + "&rand=sjrand";
+//        HttpUtil.get(url, new CheckRandCodeCallback());
+
+        final TicketsService service = RetrofitManager.getInstance().getService();
+        service.checkRandCode(randCode, "sjrand").enqueue(new retrofit2.Callback<ResponseBody>() {
+            @Override
+            public void onResponse(retrofit2.Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+                try {
+                    String json = response.body().string();
+                    JSONObject object = new JSONObject(json);
+                    String result = object.getJSONObject("data").getString("result");
+                    if (result.equals("1")) {
+                        service.loginSuggest(username, password, randCode).enqueue(new retrofit2.Callback<ResponseBody>() {
+                            @Override
+                            public void onResponse(retrofit2.Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+                                try {
+                                    String json = response.body().string();
+                                    JSONObject object = new JSONObject(json);
+                                    if (!object.has("data")) {
+                                        String message = object.getString("messages")
+                                                .replaceAll("\\[", "")
+                                                .replaceAll("]", "")
+                                                .replaceAll("\"", "");
+                                        ToastUtil.showShortToast(LoginActivity.this, message);
+
+                                        clearSelected();
+                                        service.getPassCode("login", "sjrand").enqueue(new retrofit2.Callback<ResponseBody>() {
+                                            @Override
+                                            public void onResponse(retrofit2.Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+                                                final Bitmap bitmap = BitmapFactory.decodeStream(response.body().byteStream());
+                                                runOnUiThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        captcha.setImageBitmap(bitmap);
+                                                    }
+                                                });
+                                            }
+
+                                            @Override
+                                            public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
+
+                                            }
+                                        });
+                                    }
+                                    else if (object.getJSONObject("data").getString("loginCheck").equals("Y")){
+                                        ToastUtil.showShortToast(LoginActivity.this, "登陆成功");
+                                    }
+                                }
+                                catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
+                                t.printStackTrace();
+                            }
+                        });
+                    }
+                    else {
+                        ToastUtil.showShortToast(LoginActivity.this, "验证码错误");
+                        clearSelected();
+                        service.getPassCode("login", "sjrand").enqueue(new retrofit2.Callback<ResponseBody>() {
+                            @Override
+                            public void onResponse(retrofit2.Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+                                final Bitmap bitmap = BitmapFactory.decodeStream(response.body().byteStream());
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        captcha.setImageBitmap(bitmap);
+                                    }
+                                });
+                            }
+
+                            @Override
+                            public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
+
+                            }
+                        });
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
+                t.printStackTrace();
+            }
+        });
     }
 
     private String getRandCode() {
@@ -228,11 +321,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
         @Override
         public void onResponse(Call call, Response response) throws IOException {
             List<String> list = response.headers("Set-Cookie");
-//            if (!list.isEmpty()) {
-//                String jsessionid = list.get(0).split(" ")[0];
-//                String bigipServerotn = list.get(1).split(" ")[0];
-//                HttpUtil.cookie = jsessionid + "_jc_save_showIns=true;" + bigipServerotn;
-//            }
             if (!list.isEmpty()) {
                 for (String s : list) {
                     HttpUtil.cookie = HttpUtil.cookie + s.split(" ")[0];
@@ -360,13 +448,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
 
         @Override
         public void onResponse(Call call, Response response) throws IOException {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(LoginActivity.this, "登录成功", Toast.LENGTH_SHORT).show();
-                }
-            });
-
+            Toast.makeText(LoginActivity.this, "登录成功", Toast.LENGTH_SHORT).show();
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -392,6 +474,42 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
             startActivity(new Intent(LoginActivity.this, MainActivity.class));
             finish();
         }
+    }
+
+
+
+
+
+
+    private void loginInit() {
+        final TicketsService service = RetrofitManager.getInstance().getService();
+        service.loginInit().enqueue(new retrofit2.Callback<ResponseBody>() {
+            @Override
+            public void onResponse(retrofit2.Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+                service.getPassCode("login", "sjrand").enqueue(new retrofit2.Callback<ResponseBody>() {
+                    @Override
+                    public void onResponse(retrofit2.Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+                        final Bitmap bitmap = BitmapFactory.decodeStream(response.body().byteStream());
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                captcha.setImageBitmap(bitmap);
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
+
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
+                t.printStackTrace();
+            }
+        });
     }
 
 }

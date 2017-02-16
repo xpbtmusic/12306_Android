@@ -20,7 +20,6 @@ import com.akari.tickets.retrofit.TicketsService;
 import com.akari.tickets.utils.HttpUtil;
 import com.akari.tickets.utils.PassengerUtil;
 import com.akari.tickets.utils.StationCodeUtil;
-import com.akari.tickets.utils.ToastUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -30,15 +29,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import io.reactivex.Observer;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.FormBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import rx.Observable;
+import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 public class LoginActivity extends AppCompatActivity implements View.OnTouchListener, View.OnClickListener {
 
@@ -60,6 +61,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
     private String randCode;
 
     private float density;
+    private Subscription subscription;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -173,7 +175,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
     public void onClick(View v) {
         if (v.getId() == R.id.btn_login) {
             if (preCheckThrough()) {
-                checkRandCodeAndUser();
+//                checkRandCodeAndUser();
             }
         }
     }
@@ -196,98 +198,98 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
         return true;
     }
 /**************************************************************************************************************************/
-    private void checkRandCodeAndUser() {
-//        String url = "https://kyfw.12306.cn/otn/passcodeNew/checkRandCodeAnsyn?randCode=" + randCode + "&rand=sjrand";
-//        HttpUtil.get(url, new CheckRandCodeCallback());
-
-        final TicketsService service = RetrofitManager.getInstance().getService();
-        service.checkRandCode(randCode, "sjrand").enqueue(new retrofit2.Callback<ResponseBody>() {
-            @Override
-            public void onResponse(retrofit2.Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
-                try {
-                    String json = response.body().string();
-                    JSONObject object = new JSONObject(json);
-                    String result = object.getJSONObject("data").getString("result");
-                    if (result.equals("1")) {
-                        service.loginSuggest(username, password, randCode).enqueue(new retrofit2.Callback<ResponseBody>() {
-                            @Override
-                            public void onResponse(retrofit2.Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
-                                try {
-                                    String json = response.body().string();
-                                    JSONObject object = new JSONObject(json);
-                                    if (!object.has("data")) {
-                                        String message = object.getString("messages")
-                                                .replaceAll("\\[", "")
-                                                .replaceAll("]", "")
-                                                .replaceAll("\"", "");
-                                        ToastUtil.showShortToast(LoginActivity.this, message);
-
-                                        clearSelected();
-                                        service.getPassCode("login", "sjrand").enqueue(new retrofit2.Callback<ResponseBody>() {
-                                            @Override
-                                            public void onResponse(retrofit2.Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
-                                                final Bitmap bitmap = BitmapFactory.decodeStream(response.body().byteStream());
-                                                runOnUiThread(new Runnable() {
-                                                    @Override
-                                                    public void run() {
-                                                        captcha.setImageBitmap(bitmap);
-                                                    }
-                                                });
-                                            }
-
-                                            @Override
-                                            public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
-
-                                            }
-                                        });
-                                    }
-                                    else if (object.getJSONObject("data").getString("loginCheck").equals("Y")){
-                                        ToastUtil.showShortToast(LoginActivity.this, "登陆成功");
-                                    }
-                                }
-                                catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                            }
-
-                            @Override
-                            public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
-                                t.printStackTrace();
-                            }
-                        });
-                    }
-                    else {
-                        ToastUtil.showShortToast(LoginActivity.this, "验证码错误");
-                        clearSelected();
-                        service.getPassCode("login", "sjrand").enqueue(new retrofit2.Callback<ResponseBody>() {
-                            @Override
-                            public void onResponse(retrofit2.Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
-                                final Bitmap bitmap = BitmapFactory.decodeStream(response.body().byteStream());
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        captcha.setImageBitmap(bitmap);
-                                    }
-                                });
-                            }
-
-                            @Override
-                            public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
-
-                            }
-                        });
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
-                t.printStackTrace();
-            }
-        });
-    }
+//    private void checkRandCodeAndUser() {
+////        String url = "https://kyfw.12306.cn/otn/passcodeNew/checkRandCodeAnsyn?randCode=" + randCode + "&rand=sjrand";
+////        HttpUtil.get(url, new CheckRandCodeCallback());
+//
+//        final TicketsService service = RetrofitManager.getInstance().getService();
+//        service.checkRandCode(randCode, "sjrand").enqueue(new retrofit2.Callback<ResponseBody>() {
+//            @Override
+//            public void onResponse(retrofit2.Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+//                try {
+//                    String json = response.body().string();
+//                    JSONObject object = new JSONObject(json);
+//                    String result = object.getJSONObject("data").getString("result");
+//                    if (result.equals("1")) {
+//                        service.loginSuggest(username, password, randCode).enqueue(new retrofit2.Callback<ResponseBody>() {
+//                            @Override
+//                            public void onResponse(retrofit2.Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+//                                try {
+//                                    String json = response.body().string();
+//                                    JSONObject object = new JSONObject(json);
+//                                    if (!object.has("data")) {
+//                                        String message = object.getString("messages")
+//                                                .replaceAll("\\[", "")
+//                                                .replaceAll("]", "")
+//                                                .replaceAll("\"", "");
+//                                        ToastUtil.showShortToast(LoginActivity.this, message);
+//
+//                                        clearSelected();
+//                                        service.getPassCode("login", "sjrand").enqueue(new retrofit2.Callback<ResponseBody>() {
+//                                            @Override
+//                                            public void onResponse(retrofit2.Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+//                                                final Bitmap bitmap = BitmapFactory.decodeStream(response.body().byteStream());
+//                                                runOnUiThread(new Runnable() {
+//                                                    @Override
+//                                                    public void run() {
+//                                                        captcha.setImageBitmap(bitmap);
+//                                                    }
+//                                                });
+//                                            }
+//
+//                                            @Override
+//                                            public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
+//
+//                                            }
+//                                        });
+//                                    }
+//                                    else if (object.getJSONObject("data").getString("loginCheck").equals("Y")){
+//                                        ToastUtil.showShortToast(LoginActivity.this, "登陆成功");
+//                                    }
+//                                }
+//                                catch (Exception e) {
+//                                    e.printStackTrace();
+//                                }
+//                            }
+//
+//                            @Override
+//                            public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
+//                                t.printStackTrace();
+//                            }
+//                        });
+//                    }
+//                    else {
+//                        ToastUtil.showShortToast(LoginActivity.this, "验证码错误");
+//                        clearSelected();
+//                        service.getPassCode("login", "sjrand").enqueue(new retrofit2.Callback<ResponseBody>() {
+//                            @Override
+//                            public void onResponse(retrofit2.Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+//                                final Bitmap bitmap = BitmapFactory.decodeStream(response.body().byteStream());
+//                                runOnUiThread(new Runnable() {
+//                                    @Override
+//                                    public void run() {
+//                                        captcha.setImageBitmap(bitmap);
+//                                    }
+//                                });
+//                            }
+//
+//                            @Override
+//                            public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
+//
+//                            }
+//                        });
+//                    }
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
+//                t.printStackTrace();
+//            }
+//        });
+//    }
 
     private String getRandCode() {
         StringBuilder builder = new StringBuilder();
@@ -482,78 +484,45 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
 
 
 
-
+    
 
 
     private void loginInit() {
         final TicketsService service = RetrofitManager.getInstance().getService();
-//        service.loginInit().enqueue(new retrofit2.Callback<ResponseBody>() {
-//            @Override
-//            public void onResponse(retrofit2.Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
-//                service.getPassCode("login", "sjrand").enqueue(new retrofit2.Callback<ResponseBody>() {
-//                    @Override
-//                    public void onResponse(retrofit2.Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
-//                        final Bitmap bitmap = BitmapFactory.decodeStream(response.body().byteStream());
-//                        runOnUiThread(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                captcha.setImageBitmap(bitmap);
-//                            }
-//                        });
-//                    }
-//
-//                    @Override
-//                    public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
-//
-//                    }
-//                });
-//            }
-//
-//            @Override
-//            public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
-//                t.printStackTrace();
-//            }
-//        });
-        service.loginInit()
+        subscription = service.loginInit()
+                .flatMap(new Func1<ResponseBody, Observable<ResponseBody>>() {
+                    @Override
+                    public Observable<ResponseBody> call(ResponseBody responseBody) {
+                        System.out.println("11111111111111111111111");
+                        return service.getPassCode("login", "sjrand");
+                    }
+                })
+                .map(new Func1<ResponseBody, Bitmap>() {
+                    @Override
+                    public Bitmap call(ResponseBody responseBody) {
+                        return BitmapFactory.decodeStream(responseBody.byteStream());
+                    }
+                })
                 .subscribeOn(Schedulers.io())
+                .unsubscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<ResponseBody>() {
+                .subscribe(new Action1<Bitmap>() {
                     @Override
-                    public void onSubscribe(Disposable d) {
-
-                    }
-
-                    @Override
-                    public void onNext(ResponseBody value) {
-                        service.getPassCode("login", "sjrand").enqueue(new retrofit2.Callback<ResponseBody>() {
-                            @Override
-                            public void onResponse(retrofit2.Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
-                                final Bitmap bitmap = BitmapFactory.decodeStream(response.body().byteStream());
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        captcha.setImageBitmap(bitmap);
-                                    }
-                                });
-                            }
-
-                            @Override
-                            public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
-
-                            }
-                        });
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-
-                    }
-
-                    @Override
-                    public void onComplete() {
-
+                    public void call(Bitmap bitmap) {
+                        captcha.setImageBitmap(bitmap);
                     }
                 });
     }
 
+    private void unSubscribe() {
+        if (subscription != null && !subscription.isUnsubscribed()) {
+            subscription.unsubscribe();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unSubscribe();
+    }
 }

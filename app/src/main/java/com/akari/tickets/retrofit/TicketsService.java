@@ -1,6 +1,6 @@
 package com.akari.tickets.retrofit;
 
-import io.reactivex.Observable;
+import okhttp3.Response;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Field;
@@ -8,6 +8,7 @@ import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Query;
+import rx.Observable;
 
 /**
  * Created by Akari on 2017/2/14.
@@ -18,7 +19,7 @@ public interface TicketsService {
     Observable<ResponseBody> loginInit();
 
     @GET("passcodeNew/getPassCodeNew")
-    Call<ResponseBody> getPassCode(@Query("module") String module, @Query("rand") String rand);
+    Observable<ResponseBody> getPassCode(@Query("module") String module, @Query("rand") String rand);
 
     @FormUrlEncoded
     @POST("passcodeNew/checkRandCodeAnsyn")

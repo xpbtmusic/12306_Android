@@ -1,8 +1,9 @@
 package com.akari.tickets.retrofit;
 
-import okhttp3.Response;
+import com.akari.tickets.beans.CheckRandCodeResponse;
+import com.akari.tickets.beans.LoginSuggestResponse;
+
 import okhttp3.ResponseBody;
-import retrofit2.Call;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
@@ -23,19 +24,19 @@ public interface TicketsService {
 
     @FormUrlEncoded
     @POST("passcodeNew/checkRandCodeAnsyn")
-    Call<ResponseBody> checkRandCode(@Field(value = "randCode", encoded = true) String randCode, @Field("rand") String rand);
+    Observable<CheckRandCodeResponse> checkRandCode(@Field(value = "randCode", encoded = true) String randCode, @Field("rand") String rand);
 
     @FormUrlEncoded
     @POST("login/loginAysnSuggest")
-    Call<ResponseBody> loginSuggest(@Field("loginUserDTO.user_name") String username, @Field("userDTO.password") String password, @Field(value = "randCode", encoded = true) String randCode);
+    Observable<LoginSuggestResponse> loginSuggest(@Field("loginUserDTO.user_name") String username, @Field("userDTO.password") String password, @Field(value = "randCode", encoded = true) String randCode);
 
     @FormUrlEncoded
     @POST("login/userLogin")
-    Call<ResponseBody> userLogin(@Field("_json_att") String param);
+    Observable<ResponseBody> userLogin(@Field("_json_att") String param);
 
     @FormUrlEncoded
     @POST("passengers/init")
-    Call<ResponseBody> getPassengers(@Field("_json_att") String param);
+    Observable<ResponseBody> getPassengers(@Field("_json_att") String param);
 
 
 }

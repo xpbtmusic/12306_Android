@@ -10,6 +10,7 @@ import okhttp3.OkHttpClient;
 import retrofit2.Converter;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 /**
  * Created by Akari on 2017/2/14.
@@ -34,14 +35,13 @@ public class RetrofitManager {
 
     private OkHttpClient getClient() {
         HttpsUtils.SSLParams sslParams = HttpsUtils.getSslSocketFactory(null, null, null);
-        OkHttpClient client = new OkHttpClient.Builder()
+        return new OkHttpClient.Builder()
                 .readTimeout(TIME_OUT, TimeUnit.MILLISECONDS)
                 .connectTimeout(TIME_OUT, TimeUnit.MILLISECONDS)
                 .addInterceptor(new ReceiveCookieInterceptor())
                 .addInterceptor(new AddCookieInterceptor())
                 .sslSocketFactory(sslParams.sSLSocketFactory, sslParams.trustManager)
                 .build();
-        return client;
     }
 
     public TicketsService getService() {
@@ -49,19 +49,10 @@ public class RetrofitManager {
             retrofit = new Retrofit.Builder()
                     .baseUrl("https://kyfw.12306.cn/otn/")
                     .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+                    .addConverterFactory(GsonConverterFactory.create())
                     .client(getClient())
                     .build();
         }
-        return retrofit.create(TicketsService.class);
-    }
-
-    public TicketsService getService(Converter.Factory factory) {
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://kyfw.12306.cn/otn/")
-                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
-                .client(getClient())
-                .addConverterFactory(factory)
-                .build();
         return retrofit.create(TicketsService.class);
     }
 }

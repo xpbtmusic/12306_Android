@@ -17,7 +17,7 @@ import com.akari.tickets.R;
 import com.akari.tickets.beans.CheckRandCodeResponse;
 import com.akari.tickets.beans.LoginSuggestResponse;
 import com.akari.tickets.http.RetrofitManager;
-import com.akari.tickets.http.APIService;
+import com.akari.tickets.http.HttpService;
 import com.akari.tickets.utils.PassengerUtil;
 import com.akari.tickets.utils.StationCodeUtil;
 import com.akari.tickets.utils.SubscriptionUtil;
@@ -219,7 +219,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
     }
 
     private void loginInit() {
-        final APIService service = RetrofitManager.getInstance().getService();
+        final HttpService service = RetrofitManager.getInstance().getService();
         SubscriptionUtil.unSubscribe(subscription);
         subscription = service.loginInit()
                 .flatMap(new Func1<ResponseBody, Observable<ResponseBody>>() {
@@ -245,7 +245,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
     }
 
     private void login() {
-        final APIService service = RetrofitManager.getInstance().getService();
+        final HttpService service = RetrofitManager.getInstance().getService();
         SubscriptionUtil.unSubscribe(subscription);
         subscription = service.checkRandCode(randCode, "sjrand")
                 .flatMap(new Func1<CheckRandCodeResponse, Observable<LoginSuggestResponse>>() {
@@ -307,7 +307,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
     }
 
     private void getPassCode() {
-        APIService service = RetrofitManager.getInstance().getService();
+        HttpService service = RetrofitManager.getInstance().getService();
         SubscriptionUtil.unSubscribe(subscription);
         subscription = service.getPassCode("login", "sjrand")
                 .map(new Func1<ResponseBody, Bitmap>() {
@@ -334,6 +334,12 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
                 clearSelected();
             }
         });
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        SubscriptionUtil.unSubscribe(subscription);
     }
 
     @Override

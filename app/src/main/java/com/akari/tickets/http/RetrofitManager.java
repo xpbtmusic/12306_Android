@@ -43,7 +43,7 @@ public class RetrofitManager {
                 .build();
     }
 
-    public APIService getService() {
+    public HttpService getService() {
         if (retrofit == null) {
             retrofit = new Retrofit.Builder()
                     .baseUrl("https://kyfw.12306.cn/otn/")
@@ -52,6 +52,6 @@ public class RetrofitManager {
                     .client(getClient())
                     .build();
         }
-        return retrofit.create(APIService.class);
+        return retrofit.create(HttpService.class);
     }
 }

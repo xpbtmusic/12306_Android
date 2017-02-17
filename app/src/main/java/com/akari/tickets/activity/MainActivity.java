@@ -23,9 +23,11 @@ import com.akari.tickets.adapter.SeatsAdapter;
 import com.akari.tickets.adapter.TrainsAdapter;
 import com.akari.tickets.beans.Passenger;
 import com.akari.tickets.beans.QueryParam;
+import com.akari.tickets.beans.QueryTrainsResponse;
 import com.akari.tickets.fragment.DatePickerFragment;
-import com.akari.tickets.http.APIService;
+import com.akari.tickets.http.HttpService;
 import com.akari.tickets.http.RetrofitManager;
+import com.akari.tickets.rxbus.RxBus;
 import com.akari.tickets.utils.DateUtil;
 import com.akari.tickets.utils.PassengerUtil;
 import com.akari.tickets.utils.QueryUtil;
@@ -33,14 +35,10 @@ import com.akari.tickets.utils.StationCodeUtil;
 import com.akari.tickets.utils.SubscriptionUtil;
 import com.akari.tickets.utils.ToastUtil;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-import okhttp3.ResponseBody;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
@@ -63,7 +61,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ScrollView scrollView;
     private ImageView refresh;
 
-    private Subscription subscription;
+    private Subscription querySubscription;
+    private Subscription busSubscription;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,7 +92,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         button.setOnClickListener(this);
         refresh.setOnClickListener(this);
 
-        checkIfGet();
+        registerBus();
+
+//        checkIfGet();
     }
 
     private void loadDefaultData() {
@@ -112,28 +113,33 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void getTrains() {
-        APIService service = RetrofitManager.getInstance().getService();
-        SubscriptionUtil.unSubscribe(subscription);
+        HttpService service = RetrofitManager.getInstance().getService();
+        SubscriptionUtil.unSubscribe(querySubscription);
         QueryParam queryParam = getQueryParam();
-        subscription = service.queryTrains(queryParam.getTrain_date(), queryParam.getFrom_station_code(), queryParam.getTo_station_code(), queryParam.getPurpose_codes())
+        querySubscription = service.queryTrains(queryParam.getTrain_date(), queryParam.getFrom_station_code(), queryParam.getTo_station_code(), queryParam.getPurpose_codes())
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Action1<ResponseBody>() {
+                .subscribe(new Action1<QueryTrainsResponse>() {
                     @Override
-                    public void call(ResponseBody responseBody) {
-                        try {
-                            String json = responseBody.string();
-                            System.out.println(json);
-                            JSONArray array = new JSONObject(json).getJSONArray("data");
-                            trains.clear();
-                            if (array.length() != 0) {
-                                for (int i = 0; i < array.length(); i++) {
-                                    trains.add(array.getJSONObject(i).getJSONObject("queryLeftNewDTO").getString("station_train_code"));
-                                }
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                    public void call(QueryTrainsResponse queryTrainsResponse) {
+                        trains.clear();
+                        List<QueryTrainsResponse.Data> datas = queryTrainsResponse.getData();
+                        for (QueryTrainsResponse.Data data : datas) {
+                            trains.add(data.getQueryLeftNewDTO().getStation_train_code());
                         }
+                    }
+                });
+    }
+
+    private void registerBus() {
+        SubscriptionUtil.unSubscribe(busSubscription);
+        busSubscription = RxBus.getDefault().toObservable()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<Object>() {
+                    @Override
+                    public void call(Object o) {
+                        showShortToast(o.toString());
                     }
                 });
     }
@@ -163,19 +169,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 buildChooseDate2Dialog();
                 break;
             case R.id.button:
-                if (preCheckThrough()) {
-                    if (button.getText().toString().equals("开始查询")) {
-                        QueryUtil.get = false;
-                        button.setText("停止查询");
-                        QueryUtil.startQueryLoop(getQueryParam());
-                        getLog();
-                    }
-                    else {
-                        QueryUtil.get = true;
-                        button.setText("开始查询");
-                        QueryUtil.thread = null;
-                    }
-                }
+//                if (preCheckThrough()) {
+//                    if (button.getText().toString().equals("开始查询")) {
+//                        QueryUtil.get = false;
+//                        button.setText("停止查询");
+//                        QueryUtil.startQueryLoop(getQueryParam());
+//                        getLog();
+//                    }
+//                    else {
+//                        QueryUtil.get = true;
+//                        button.setText("开始查询");
+//                        QueryUtil.thread = null;
+//                    }
+//                }
+                RxBus.getDefault().post("发送");
                 break;
             case R.id.refresh:
                 getTrains();
@@ -482,8 +489,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
+    protected void onStop() {
+        super.onStop();
+        SubscriptionUtil.unSubscribe(querySubscription);
+        SubscriptionUtil.unSubscribe(busSubscription);
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
-        SubscriptionUtil.unSubscribe(subscription);
+        SubscriptionUtil.unSubscribe(querySubscription);
+        SubscriptionUtil.unSubscribe(busSubscription);
     }
 }

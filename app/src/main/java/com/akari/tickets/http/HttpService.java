@@ -16,7 +16,7 @@ import rx.Observable;
  * Created by Akari on 2017/2/14.
  */
 
-public interface APIService {
+public interface HttpService {
     @GET("login/init")
     Observable<ResponseBody> loginInit();
 
@@ -41,6 +41,6 @@ public interface APIService {
     Observable<ResponseBody> initPassengers(@Field("_json_att") String param);
 
     @GET("leftTicket/queryX")
-    Observable<ResponseBody> queryTrains(@Query("leftTicketDTO.train_date") String trainDate, @Query("leftTicketDTO.from_station") String fromStation,
+    Observable<QueryTrainsResponse> queryTrains(@Query("leftTicketDTO.train_date") String trainDate, @Query("leftTicketDTO.from_station") String fromStation,
                                                 @Query("leftTicketDTO.to_station") String toStation, @Query("purpose_codes") String purposeCode);
 }

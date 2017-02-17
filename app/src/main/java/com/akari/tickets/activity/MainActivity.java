@@ -15,7 +15,6 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.akari.tickets.R;
 import com.akari.tickets.adapter.Date2Adapter;
@@ -32,6 +31,7 @@ import com.akari.tickets.utils.PassengerUtil;
 import com.akari.tickets.utils.QueryUtil;
 import com.akari.tickets.utils.StationCodeUtil;
 import com.akari.tickets.utils.SubscriptionUtil;
+import com.akari.tickets.utils.ToastUtil;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -193,15 +193,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     return true;
                 }
                 else {
-                    Toast.makeText(this, "请选择席别", Toast.LENGTH_SHORT).show();
+                    showShortToast("请选择席别");
                 }
             }
             else {
-                Toast.makeText(this, "请选择车次", Toast.LENGTH_SHORT).show();
+                showShortToast("请选择车次");
             }
         }
         else {
-            Toast.makeText(this, "请选择乘车人", Toast.LENGTH_SHORT).show();
+            showShortToast("请选择乘车人");
         }
         return false;
     }
@@ -469,6 +469,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 manager.notify(1, notification);
             }
         }).start();
+    }
+
+    private void showShortToast(String s) {
+        ToastUtil.showShortToast(MainActivity.this, s);
     }
 
     @Override

@@ -22,7 +22,6 @@ import java.util.HashMap;
 public class ChooseStationActivity extends AppCompatActivity implements OnQuickSideBarTouchListener {
 
     private ListView listView;
-//    private RecyclerView recyclerView;
     private QuickSideBarTipsView quickSideBarTipsView;
     private QuickSideBarView quickSideBarView;
     private HashMap<String, Integer> map;
@@ -84,7 +83,6 @@ public class ChooseStationActivity extends AppCompatActivity implements OnQuickS
     public void onLetterChanged(String letter, int position, float y) {
         quickSideBarTipsView.setText(letter, position, y);
         if(map.containsKey(letter)) {
-//            recyclerView.scrollToPosition(map.get(letter));
             listView.setSelection(map.get(letter));
         }
     }

@@ -9,9 +9,6 @@ import android.widget.TextView;
 import com.akari.tickets.R;
 import com.akari.tickets.constants.Constants;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Created by Akari on 2017/1/1.
  */

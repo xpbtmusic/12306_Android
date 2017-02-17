@@ -7,7 +7,6 @@ import com.zhy.http.okhttp.https.HttpsUtils;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
-import retrofit2.Converter;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -44,7 +43,7 @@ public class RetrofitManager {
                 .build();
     }
 
-    public TicketsService getService() {
+    public APIService getService() {
         if (retrofit == null) {
             retrofit = new Retrofit.Builder()
                     .baseUrl("https://kyfw.12306.cn/otn/")
@@ -53,6 +52,6 @@ public class RetrofitManager {
                     .client(getClient())
                     .build();
         }
-        return retrofit.create(TicketsService.class);
+        return retrofit.create(APIService.class);
     }
 }

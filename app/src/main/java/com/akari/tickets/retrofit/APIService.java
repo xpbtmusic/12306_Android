@@ -15,7 +15,7 @@ import rx.Observable;
  * Created by Akari on 2017/2/14.
  */
 
-public interface TicketsService {
+public interface APIService {
     @GET("login/init")
     Observable<ResponseBody> loginInit();
 

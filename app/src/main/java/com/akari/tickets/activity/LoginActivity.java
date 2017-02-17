@@ -1,5 +1,6 @@
 package com.akari.tickets.activity;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.support.v7.app.AppCompatActivity;
@@ -11,15 +12,17 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import com.akari.tickets.R;
 import com.akari.tickets.beans.CheckRandCodeResponse;
 import com.akari.tickets.beans.LoginSuggestResponse;
 import com.akari.tickets.retrofit.RetrofitManager;
 import com.akari.tickets.retrofit.TicketsService;
+import com.akari.tickets.utils.PassengerUtil;
+import com.akari.tickets.utils.StationCodeUtil;
 import com.akari.tickets.utils.ToastUtil;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -214,42 +217,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
         return randCode;
     }
 
-//    class UserLoginCallback implements Callback {
-//        @Override
-//        public void onFailure(Call call, IOException e) {
-//
-//        }
-//
-//        @Override
-//        public void onResponse(Call call, Response response) throws IOException {
-//            Toast.makeText(LoginActivity.this, "登录成功", Toast.LENGTH_SHORT).show();
-//            new Thread(new Runnable() {
-//                @Override
-//                public void run() {
-//                    StationCodeUtil.init(LoginActivity.this);
-//                }
-//            }).start();
-//
-//            String url = "https://kyfw.12306.cn/otn/passengers/init";
-//            HttpUtil.get(url, new PassengersCallback());
-//        }
-//    }
-//
-//    class PassengersCallback implements Callback {
-//        @Override
-//        public void onFailure(Call call, IOException e) {
-//
-//        }
-//
-//        @Override
-//        public void onResponse(Call call, Response response) throws IOException {
-//            String json = response.body().string().split("passengers=")[1].split(";")[0];
-//            PassengerUtil.savePassengers(json);
-//            startActivity(new Intent(LoginActivity.this, MainActivity.class));
-//            finish();
-//        }
-//    }
-
     private void loginInit() {
         final TicketsService service = RetrofitManager.getInstance().getService();
         unSubscribe();
@@ -308,12 +275,32 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
                         return null;
                     }
                 })
+                .flatMap(new Func1<ResponseBody, Observable<ResponseBody>>() {
+                    @Override
+                    public Observable<ResponseBody> call(ResponseBody responseBody) {
+                        showToastAndClearSelected("登录成功");
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                StationCodeUtil.init(LoginActivity.this);
+                            }
+                        }).start();
+                        return service.initPassengers("");
+                    }
+                })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Action1<ResponseBody>() {
                     @Override
                     public void call(ResponseBody responseBody) {
-                        ToastUtil.showShortToast(LoginActivity.this, "登录成功");
+                        try {
+                            String json = responseBody.string().split("passengers=")[1].split(";")[0];
+                            PassengerUtil.savePassengers(json);
+                            startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                            finish();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
                 });
     }

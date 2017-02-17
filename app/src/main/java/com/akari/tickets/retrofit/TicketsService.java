@@ -36,7 +36,7 @@ public interface TicketsService {
 
     @FormUrlEncoded
     @POST("passengers/init")
-    Observable<ResponseBody> getPassengers(@Field("_json_att") String param);
+    Observable<ResponseBody> initPassengers(@Field("_json_att") String param);
 
 
 }

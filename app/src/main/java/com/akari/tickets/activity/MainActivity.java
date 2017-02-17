@@ -11,7 +11,6 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
-import android.widget.DatePicker;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ScrollView;
@@ -26,27 +25,28 @@ import com.akari.tickets.adapter.TrainsAdapter;
 import com.akari.tickets.beans.Passenger;
 import com.akari.tickets.beans.QueryParam;
 import com.akari.tickets.fragment.DatePickerFragment;
+import com.akari.tickets.http.APIService;
+import com.akari.tickets.http.RetrofitManager;
 import com.akari.tickets.utils.DateUtil;
-import com.akari.tickets.utils.HttpUtil;
 import com.akari.tickets.utils.PassengerUtil;
 import com.akari.tickets.utils.QueryUtil;
 import com.akari.tickets.utils.StationCodeUtil;
+import com.akari.tickets.utils.SubscriptionUtil;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.Response;
+import okhttp3.ResponseBody;
+import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-
     private TextView fromStation;
     private TextView toStation;
     private TextView choosePassengers;
@@ -62,6 +62,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView logText;
     private ScrollView scrollView;
     private ImageView refresh;
+
+    private Subscription subscription;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,7 +108,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         back_strain_date = dateStr;
 
         trains = new ArrayList<>();
-        HttpUtil.get(getQueryParam().getUrl(), new GetTrainCodeCallBack());
+        getTrains();
+    }
+
+    private void getTrains() {
+        APIService service = RetrofitManager.getInstance().getService();
+        SubscriptionUtil.unSubscribe(subscription);
+        QueryParam queryParam = getQueryParam();
+        subscription = service.queryTrains(queryParam.getTrain_date(), queryParam.getFrom_station_code(), queryParam.getTo_station_code(), queryParam.getPurpose_codes())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<ResponseBody>() {
+                    @Override
+                    public void call(ResponseBody responseBody) {
+                        try {
+                            String json = responseBody.string();
+                            System.out.println(json);
+                            JSONArray array = new JSONObject(json).getJSONArray("data");
+                            trains.clear();
+                            if (array.length() != 0) {
+                                for (int i = 0; i < array.length(); i++) {
+                                    trains.add(array.getJSONObject(i).getJSONObject("queryLeftNewDTO").getString("station_train_code"));
+                                }
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
     }
 
     @Override
@@ -149,7 +178,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 break;
             case R.id.refresh:
-                HttpUtil.get(getQueryParam().getUrl(), new GetTrainCodeCallBack());
+                getTrains();
                 break;
             default:
                 break;
@@ -185,7 +214,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     fromStation.setText(data.getStringExtra("station"));
                     chooseTrains.setText("");
                     chooseSeats.setText("");
-                    HttpUtil.get(getQueryParam().getUrl(), new GetTrainCodeCallBack());
+                    getTrains();
                 }
                 break;
             case GET_TO_STATION:
@@ -193,7 +222,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     toStation.setText(data.getStringExtra("station"));
                     chooseTrains.setText("");
                     chooseSeats.setText("");
-                    HttpUtil.get(getQueryParam().getUrl(), new GetTrainCodeCallBack());
+                    getTrains();
                 }
                 break;
             default:
@@ -213,7 +242,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         queryParam.setSeats(chooseSeats.getText().toString().split(", "));
         queryParam.setDate2(chooseDate2.getText().toString().split(", "));
         queryParam.setPurpose_codes(PassengerUtil.getPassenger(choosePassengers.getText().toString().split(",")[0]).getPassenger_type_name());
-        queryParam.setUrl("https://kyfw.12306.cn/otn/leftTicket/queryA?leftTicketDTO.train_date=" + queryParam.getTrain_date() + "&leftTicketDTO.from_station=" + queryParam.getFrom_station_code()
+        queryParam.setUrl("https://kyfw.12306.cn/otn/leftTicket/queryX?leftTicketDTO.train_date=" + queryParam.getTrain_date() + "&leftTicketDTO.from_station=" + queryParam.getFrom_station_code()
                 + "&leftTicketDTO.to_station=" + queryParam.getTo_station_code() + "&purpose_codes=" + queryParam.getPurpose_codes());
 
         return queryParam;
@@ -392,30 +421,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         builder.show();
     }
 
-    class GetTrainCodeCallBack implements Callback {
-        @Override
-        public void onFailure(Call call, IOException e) {
-
-        }
-
-        @Override
-        public void onResponse(Call call, Response response) throws IOException {
-            String json = response.body().string();
-            System.out.println(json);
-            try {
-                JSONArray array = new JSONObject(json).getJSONArray("data");
-                trains.clear();
-                if (array.length() != 0) {
-                    for (int i = 0; i < array.length(); i++) {
-                        trains.add(array.getJSONObject(i).getJSONObject("queryLeftNewDTO").getString("station_train_code"));
-                    }
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
     private void getLog() {
         new Thread() {
             @Override
@@ -470,5 +475,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onBackPressed() {
         super.onBackPressed();
         finish();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        SubscriptionUtil.unSubscribe(subscription);
     }
 }

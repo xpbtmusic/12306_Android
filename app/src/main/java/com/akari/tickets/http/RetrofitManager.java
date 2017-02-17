@@ -1,7 +1,7 @@
-package com.akari.tickets.retrofit;
+package com.akari.tickets.http;
 
-import com.akari.tickets.retrofit.interceptor.AddCookieInterceptor;
-import com.akari.tickets.retrofit.interceptor.ReceiveCookieInterceptor;
+import com.akari.tickets.http.interceptor.AddCookieInterceptor;
+import com.akari.tickets.http.interceptor.ReceiveCookieInterceptor;
 import com.zhy.http.okhttp.https.HttpsUtils;
 
 import java.util.concurrent.TimeUnit;

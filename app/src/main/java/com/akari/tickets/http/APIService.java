@@ -1,7 +1,8 @@
-package com.akari.tickets.retrofit;
+package com.akari.tickets.http;
 
 import com.akari.tickets.beans.CheckRandCodeResponse;
 import com.akari.tickets.beans.LoginSuggestResponse;
+import com.akari.tickets.beans.QueryTrainsResponse;
 
 import okhttp3.ResponseBody;
 import retrofit2.http.Field;
@@ -28,7 +29,8 @@ public interface APIService {
 
     @FormUrlEncoded
     @POST("login/loginAysnSuggest")
-    Observable<LoginSuggestResponse> loginSuggest(@Field("loginUserDTO.user_name") String username, @Field("userDTO.password") String password, @Field(value = "randCode", encoded = true) String randCode);
+    Observable<LoginSuggestResponse> loginSuggest(@Field("loginUserDTO.user_name") String username, @Field("userDTO.password") String password,
+                                                  @Field(value = "randCode", encoded = true) String randCode);
 
     @FormUrlEncoded
     @POST("login/userLogin")
@@ -38,5 +40,7 @@ public interface APIService {
     @POST("passengers/init")
     Observable<ResponseBody> initPassengers(@Field("_json_att") String param);
 
-
+    @GET("leftTicket/queryX")
+    Observable<ResponseBody> queryTrains(@Query("leftTicketDTO.train_date") String trainDate, @Query("leftTicketDTO.from_station") String fromStation,
+                                                @Query("leftTicketDTO.to_station") String toStation, @Query("purpose_codes") String purposeCode);
 }

@@ -16,10 +16,11 @@ import android.widget.ImageView;
 import com.akari.tickets.R;
 import com.akari.tickets.beans.CheckRandCodeResponse;
 import com.akari.tickets.beans.LoginSuggestResponse;
-import com.akari.tickets.retrofit.RetrofitManager;
-import com.akari.tickets.retrofit.APIService;
+import com.akari.tickets.http.RetrofitManager;
+import com.akari.tickets.http.APIService;
 import com.akari.tickets.utils.PassengerUtil;
 import com.akari.tickets.utils.StationCodeUtil;
+import com.akari.tickets.utils.SubscriptionUtil;
 import com.akari.tickets.utils.ToastUtil;
 
 import java.io.IOException;
@@ -219,7 +220,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
 
     private void loginInit() {
         final APIService service = RetrofitManager.getInstance().getService();
-        unSubscribe();
+        SubscriptionUtil.unSubscribe(subscription);
         subscription = service.loginInit()
                 .flatMap(new Func1<ResponseBody, Observable<ResponseBody>>() {
                     @Override
@@ -245,7 +246,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
 
     private void login() {
         final APIService service = RetrofitManager.getInstance().getService();
-        unSubscribe();
+        SubscriptionUtil.unSubscribe(subscription);
         subscription = service.checkRandCode(randCode, "sjrand")
                 .flatMap(new Func1<CheckRandCodeResponse, Observable<LoginSuggestResponse>>() {
                     @Override
@@ -306,8 +307,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
     }
 
     private void getPassCode() {
-        unSubscribe();
         APIService service = RetrofitManager.getInstance().getService();
+        SubscriptionUtil.unSubscribe(subscription);
         subscription = service.getPassCode("login", "sjrand")
                 .map(new Func1<ResponseBody, Bitmap>() {
                     @Override
@@ -335,15 +336,9 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
         });
     }
 
-    private void unSubscribe() {
-        if (subscription != null && !subscription.isUnsubscribed()) {
-            subscription.unsubscribe();
-        }
-    }
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unSubscribe();
+        SubscriptionUtil.unSubscribe(subscription);
     }
 }

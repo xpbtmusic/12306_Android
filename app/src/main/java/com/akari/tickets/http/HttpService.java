@@ -9,6 +9,7 @@ import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
+import retrofit2.http.Path;
 import retrofit2.http.Query;
 import rx.Observable;
 
@@ -40,7 +41,10 @@ public interface HttpService {
     @POST("passengers/init")
     Observable<ResponseBody> initPassengers(@Field("_json_att") String param);
 
-    @GET("leftTicket/queryX")
-    Observable<QueryTrainsResponse> queryTrains(@Query("leftTicketDTO.train_date") String trainDate, @Query("leftTicketDTO.from_station") String fromStation,
+    @GET("leftTicket/init")
+    Observable<ResponseBody> getLeftTicketUrl();
+
+    @GET("{leftTicketUrl}")
+    Observable<QueryTrainsResponse> queryTrains(@Path(value = "leftTicketUrl", encoded = true) String leftTicketUrl, @Query("leftTicketDTO.train_date") String trainDate, @Query("leftTicketDTO.from_station") String fromStation,
                                                 @Query("leftTicketDTO.to_station") String toStation, @Query("purpose_codes") String purposeCode);
 }

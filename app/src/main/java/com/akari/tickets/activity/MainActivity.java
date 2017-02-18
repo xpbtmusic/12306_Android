@@ -22,6 +22,7 @@ import com.akari.tickets.adapter.PassengersAdapter;
 import com.akari.tickets.adapter.SeatsAdapter;
 import com.akari.tickets.adapter.TrainsAdapter;
 import com.akari.tickets.beans.Passenger;
+import com.akari.tickets.beans.QueryLeftNewDTO;
 import com.akari.tickets.beans.QueryParam;
 import com.akari.tickets.beans.QueryTrainsResponse;
 import com.akari.tickets.fragment.DatePickerFragment;
@@ -35,13 +36,18 @@ import com.akari.tickets.utils.StationCodeUtil;
 import com.akari.tickets.utils.SubscriptionUtil;
 import com.akari.tickets.utils.ToastUtil;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import okhttp3.ResponseBody;
+import rx.Observable;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
+import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -63,6 +69,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private Subscription querySubscription;
     private Subscription busSubscription;
+    private Subscription loopSubscription;
+    private String leftTicketUrl = "leftTicket/queryA";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,14 +117,44 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         back_strain_date = dateStr;
 
         trains = new ArrayList<>();
-        getTrains();
+        getLeftTicketUrlAndGetTrainsFirst();
+    }
+
+    private void getLeftTicketUrlAndGetTrainsFirst() {
+        final HttpService service = RetrofitManager.getInstance().getService();
+        SubscriptionUtil.unSubscribe(querySubscription);
+        final QueryParam queryParam = getQueryParam();
+        querySubscription = service.getLeftTicketUrl()
+                .flatMap(new Func1<ResponseBody, Observable<QueryTrainsResponse>>() {
+                    @Override
+                    public Observable<QueryTrainsResponse> call(ResponseBody responseBody) {
+                        try {
+                            leftTicketUrl = responseBody.string().split("CLeftTicketUrl = '")[1].split("';")[0];
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        return service.queryTrains(leftTicketUrl, queryParam.getTrain_date(), queryParam.getFrom_station_code(), queryParam.getTo_station_code(), queryParam.getPurpose_codes());
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<QueryTrainsResponse>() {
+                    @Override
+                    public void call(QueryTrainsResponse queryTrainsResponse) {
+                        trains.clear();
+                        List<QueryTrainsResponse.Data> datas = queryTrainsResponse.getData();
+                        for (QueryTrainsResponse.Data data : datas) {
+                            trains.add(data.getQueryLeftNewDTO().getStation_train_code());
+                        }
+                    }
+                });
     }
 
     private void getTrains() {
         HttpService service = RetrofitManager.getInstance().getService();
         SubscriptionUtil.unSubscribe(querySubscription);
         QueryParam queryParam = getQueryParam();
-        querySubscription = service.queryTrains(queryParam.getTrain_date(), queryParam.getFrom_station_code(), queryParam.getTo_station_code(), queryParam.getPurpose_codes())
+        querySubscription = service.queryTrains(leftTicketUrl, queryParam.getTrain_date(), queryParam.getFrom_station_code(), queryParam.getTo_station_code(), queryParam.getPurpose_codes())
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Action1<QueryTrainsResponse>() {
@@ -182,7 +220,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                        QueryUtil.thread = null;
 //                    }
 //                }
-                RxBus.getDefault().post("发送");
+                if (button.getText().toString().equals("开始查询")) {
+                    if (preCheckThrough()) {
+                        button.setText("停止查询");
+                        startQueryLoop();
+                    }
+                }
+                else {
+                    SubscriptionUtil.unSubscribe(loopSubscription);
+                    button.setText("开始查询");
+                }
                 break;
             case R.id.refresh:
                 getTrains();
@@ -354,7 +401,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onClick(DialogInterface dialog, int which) {
                 StringBuilder builder = new StringBuilder();
                 boolean first = true;
-
                 for (int i = 0; i < SeatsAdapter.seats.length; i ++) {
                     if (SeatsAdapter.checkStatus.get(i)) {
                         if (first) {
@@ -403,7 +449,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onClick(DialogInterface dialog, int which) {
                 StringBuilder builder = new StringBuilder();
                 boolean first = true;
-
                 for (int i = 0; i < Date2Adapter.date2.length; i ++) {
                     if (Date2Adapter.checkStatus.get(i)) {
                         if (first) {
@@ -427,6 +472,93 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
         builder.show();
     }
+
+
+
+
+
+
+
+
+
+
+    private void startQueryLoop() {
+        SubscriptionUtil.unSubscribe(loopSubscription);
+        SubscriptionUtil.unSubscribe(querySubscription);
+        final HttpService service = RetrofitManager.getInstance().getService();
+        final QueryParam queryParam = getQueryParam();
+        loopSubscription = Observable.interval(1500, TimeUnit.MILLISECONDS)
+                .flatMap(new Func1<Long, Observable<QueryTrainsResponse>>() {
+                    @Override
+                    public Observable<QueryTrainsResponse> call(Long aLong) {
+                        System.out.println("正在查询..." + queryParam.getFrom_station() + " - " + queryParam.getTo_station() + "..." + (aLong + 1));
+                        return service.queryTrains(leftTicketUrl, queryParam.getTrain_date(), queryParam.getFrom_station_code(), queryParam.getTo_station_code(), queryParam.getPurpose_codes());
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<QueryTrainsResponse>() {
+                    @Override
+                    public void call(QueryTrainsResponse queryTrainsResponse) {
+                        for (QueryTrainsResponse.Data data : queryTrainsResponse.getData()) {
+                            System.out.println("yz_num : " + data.getQueryLeftNewDTO().getYz_num());
+                            if (!data.getSecretStr().equals("")) {
+                                if (data.getQueryLeftNewDTO().getStation_train_code().equals(queryParam.getTrain_code())) {
+                                    String[] seats = queryParam.getSeats();
+                                    for (String seat : seats) {
+                                        querySeats(seat, data.getQueryLeftNewDTO());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+    }
+
+    private void querySeats(String seat, QueryLeftNewDTO queryLeftNewDTO) {
+        switch (seat) {
+            case "软卧":
+                if (!queryLeftNewDTO.getRw_num().equals("无") && !queryLeftNewDTO.getRw_num().equals("--")) {
+                    SubscriptionUtil.unSubscribe(loopSubscription);
+                    button.setText("开始查询");
+                    System.out.println("正在抢软卧...");
+                }
+                break;
+            case "硬卧":
+                if (!queryLeftNewDTO.getYw_num().equals("无") && !queryLeftNewDTO.getYw_num().equals("--")) {
+                    SubscriptionUtil.unSubscribe(loopSubscription);
+                    button.setText("开始查询");
+                    System.out.println("正在抢硬卧...");
+                }
+                break;
+            case "硬座":
+                if (!queryLeftNewDTO.getYz_num().equals("无") && !queryLeftNewDTO.getYz_num().equals("--")) {
+                    SubscriptionUtil.unSubscribe(loopSubscription);
+                    button.setText("开始查询");
+                    System.out.println("正在抢硬座...");
+                }
+                break;
+            case "无座":
+                if (!queryLeftNewDTO.getWz_num().equals("无") && !queryLeftNewDTO.getWz_num().equals("--")) {
+                    SubscriptionUtil.unSubscribe(loopSubscription);
+                    button.setText("开始查询");
+                    System.out.println("正在抢无座...");
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+
+
+
+
+
+
+
+
+
 
     private void getLog() {
         new Thread() {
@@ -491,8 +623,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onStop() {
         super.onStop();
-        SubscriptionUtil.unSubscribe(querySubscription);
         SubscriptionUtil.unSubscribe(busSubscription);
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        registerBus();
     }
 
     @Override
@@ -500,5 +637,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onDestroy();
         SubscriptionUtil.unSubscribe(querySubscription);
         SubscriptionUtil.unSubscribe(busSubscription);
+        SubscriptionUtil.unSubscribe(loopSubscription);
     }
 }

@@ -1,11 +1,16 @@
 package com.akari.tickets.http;
 
+import com.akari.tickets.beans.CheckOrderInfoResponse;
 import com.akari.tickets.beans.CheckRandCodeResponse;
+import com.akari.tickets.beans.ConfirmSingleForQueueResponse;
 import com.akari.tickets.beans.LoginSuggestResponse;
 import com.akari.tickets.beans.QueryTrainsResponse;
 
+import java.util.Map;
+
 import okhttp3.ResponseBody;
 import retrofit2.http.Field;
+import retrofit2.http.FieldMap;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
@@ -47,4 +52,20 @@ public interface HttpService {
     @GET("{leftTicketUrl}")
     Observable<QueryTrainsResponse> queryTrains(@Path(value = "leftTicketUrl", encoded = true) String leftTicketUrl, @Query("leftTicketDTO.train_date") String trainDate, @Query("leftTicketDTO.from_station") String fromStation,
                                                 @Query("leftTicketDTO.to_station") String toStation, @Query("purpose_codes") String purposeCode);
+
+    @FormUrlEncoded
+    @POST("leftTicket/submitOrderRequest")
+    Observable<ResponseBody> submitOrder(@FieldMap(encoded = true) Map<String, String> fields);
+
+    @FormUrlEncoded
+    @POST("confirmPassenger/initDc")
+    Observable<ResponseBody> initDc(@Field("_json_att") String _json_att);
+
+    @FormUrlEncoded
+    @POST("confirmPassenger/checkOrderInfo")
+    Observable<CheckOrderInfoResponse> checkOrderInfo(@FieldMap(encoded = true) Map<String, String> fields);
+
+    @FormUrlEncoded
+    @POST("confirmPassenger/confirmSingleForQueue")
+    Observable<ConfirmSingleForQueueResponse> confirmSingleForQueue(@FieldMap Map<String, String> field);
 }

@@ -183,7 +183,7 @@ public class OrderUtil {
         }
     }
 
-    private static void getOrderParam(JSONObject object, OrderParam orderParam) {
+    public static void getOrderParam(JSONObject object, OrderParam orderParam) {
         try {
             StringBuilder passengerTicketStr = new StringBuilder();
             passengerTicketStr.append(seat_type_codes);

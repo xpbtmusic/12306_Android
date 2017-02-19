@@ -21,6 +21,9 @@ import com.akari.tickets.adapter.Date2Adapter;
 import com.akari.tickets.adapter.PassengersAdapter;
 import com.akari.tickets.adapter.SeatsAdapter;
 import com.akari.tickets.adapter.TrainsAdapter;
+import com.akari.tickets.beans.CheckOrderInfoResponse;
+import com.akari.tickets.beans.ConfirmSingleForQueueResponse;
+import com.akari.tickets.beans.OrderParam;
 import com.akari.tickets.beans.Passenger;
 import com.akari.tickets.beans.QueryLeftNewDTO;
 import com.akari.tickets.beans.QueryParam;
@@ -30,16 +33,20 @@ import com.akari.tickets.http.HttpService;
 import com.akari.tickets.http.RetrofitManager;
 import com.akari.tickets.rxbus.RxBus;
 import com.akari.tickets.utils.DateUtil;
+import com.akari.tickets.utils.OrderUtil;
 import com.akari.tickets.utils.PassengerUtil;
-import com.akari.tickets.utils.QueryUtil;
 import com.akari.tickets.utils.StationCodeUtil;
 import com.akari.tickets.utils.SubscriptionUtil;
 import com.akari.tickets.utils.ToastUtil;
 
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.ResponseBody;
@@ -70,7 +77,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Subscription querySubscription;
     private Subscription busSubscription;
     private Subscription loopSubscription;
+    private Subscription orderSubscription;
     private String leftTicketUrl = "leftTicket/queryA";
+    private static OrderParam orderParam;
+    private static boolean breakChooseSeats = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,8 +111,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         refresh.setOnClickListener(this);
 
         registerBus();
-
-//        checkIfGet();
     }
 
     private void loadDefaultData() {
@@ -207,19 +215,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 buildChooseDate2Dialog();
                 break;
             case R.id.button:
-//                if (preCheckThrough()) {
-//                    if (button.getText().toString().equals("开始查询")) {
-//                        QueryUtil.get = false;
-//                        button.setText("停止查询");
-//                        QueryUtil.startQueryLoop(getQueryParam());
-//                        getLog();
-//                    }
-//                    else {
-//                        QueryUtil.get = true;
-//                        button.setText("开始查询");
-//                        QueryUtil.thread = null;
-//                    }
-//                }
                 if (button.getText().toString().equals("开始查询")) {
                     if (preCheckThrough()) {
                         button.setText("停止查询");
@@ -473,15 +468,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         builder.show();
     }
 
-
-
-
-
-
-
-
-
-
     private void startQueryLoop() {
         SubscriptionUtil.unSubscribe(loopSubscription);
         SubscriptionUtil.unSubscribe(querySubscription);
@@ -501,12 +487,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     @Override
                     public void call(QueryTrainsResponse queryTrainsResponse) {
                         for (QueryTrainsResponse.Data data : queryTrainsResponse.getData()) {
-                            System.out.println("yz_num : " + data.getQueryLeftNewDTO().getYz_num());
                             if (!data.getSecretStr().equals("")) {
                                 if (data.getQueryLeftNewDTO().getStation_train_code().equals(queryParam.getTrain_code())) {
                                     String[] seats = queryParam.getSeats();
                                     for (String seat : seats) {
-                                        querySeats(seat, data.getQueryLeftNewDTO());
+                                        querySeats(seat, data.getQueryLeftNewDTO(), data.getSecretStr(), queryParam);
+                                        if (breakChooseSeats) {
+                                            break;
+                                        }
                                     }
                                 }
                             }
@@ -515,13 +503,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 });
     }
 
-    private void querySeats(String seat, QueryLeftNewDTO queryLeftNewDTO) {
+    private void querySeats(String seat, QueryLeftNewDTO queryLeftNewDTO, String secretStr, QueryParam queryParam) {
         switch (seat) {
             case "软卧":
                 if (!queryLeftNewDTO.getRw_num().equals("无") && !queryLeftNewDTO.getRw_num().equals("--")) {
                     SubscriptionUtil.unSubscribe(loopSubscription);
                     button.setText("开始查询");
                     System.out.println("正在抢软卧...");
+                    OrderUtil.seat_type_codes = "4";
+                    breakChooseSeats = true;
+                    submitOrder(secretStr, queryParam);
                 }
                 break;
             case "硬卧":
@@ -529,6 +520,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     SubscriptionUtil.unSubscribe(loopSubscription);
                     button.setText("开始查询");
                     System.out.println("正在抢硬卧...");
+                    OrderUtil.seat_type_codes = "3";
+                    breakChooseSeats = true;
+                    submitOrder(secretStr, queryParam);
                 }
                 break;
             case "硬座":
@@ -536,6 +530,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     SubscriptionUtil.unSubscribe(loopSubscription);
                     button.setText("开始查询");
                     System.out.println("正在抢硬座...");
+                    OrderUtil.seat_type_codes = "1";
+                    breakChooseSeats = true;
+                    submitOrder(secretStr, queryParam);
                 }
                 break;
             case "无座":
@@ -543,6 +540,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     SubscriptionUtil.unSubscribe(loopSubscription);
                     button.setText("开始查询");
                     System.out.println("正在抢无座...");
+                    OrderUtil.seat_type_codes = "1";
+                    breakChooseSeats = true;
+                    submitOrder(secretStr, queryParam);
                 }
                 break;
             default:
@@ -550,64 +550,93 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    private void submitOrder(String secretStr, QueryParam queryParam) {
+        final Map<String, String> map = new HashMap<>();
+        map.put("secretStr", secretStr);
+        map.put("train_date", queryParam.getTrain_date());
+        map.put("back_train_date", queryParam.getBack_train_date());
+        map.put("tour_flag", "dc");
+        map.put("purpose_codes", queryParam.getPurpose_codes());
+        map.put("query_from_station_name", queryParam.getFrom_station());
+        map.put("query_to_station_name", queryParam.getTo_station());
+        map.put("undefined", "");
 
-
-
-
-
-
-
-
-
-
-    private void getLog() {
-        new Thread() {
-            @Override
-            public void run() {
-                while (!QueryUtil.end) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (!QueryUtil.log.contains("正在抢")) {
-                                logText.append(QueryUtil.log);
-                                scrollView.fullScroll(View.FOCUS_DOWN);
-                            }
-                        }
-                    });
-                    try {
-                        Thread.sleep(1000);
-                        if (button.getText().toString().equals("开始查询")) {
-                            break;
-                        }
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+        final HttpService service = RetrofitManager.getInstance().getService();
+        orderSubscription = service.submitOrder(map)
+                .flatMap(new Func1<ResponseBody, Observable<ResponseBody>>() {
+                    @Override
+                    public Observable<ResponseBody> call(ResponseBody responseBody) {
+                        return service.initDc("");
                     }
-                }
-            }
-        }.start();
-    }
+                })
+                .flatMap(new Func1<ResponseBody, Observable<CheckOrderInfoResponse>>() {
+                    @Override
+                    public Observable<CheckOrderInfoResponse> call(ResponseBody responseBody) {
+                        try {
+                            String response = responseBody.string();
+                            String globalRepeatSubmitToken = response.split("globalRepeatSubmitToken = '")[1].split("';")[0];
+                            orderParam = new OrderParam();
+                            orderParam.setREPEAT_SUBMIT_TOKEN(globalRepeatSubmitToken);
 
-    private void checkIfGet() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (!QueryUtil.end) {
-                    try {
-                        Thread.sleep(2000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+                            JSONObject object = new JSONObject(response.split("ticketInfoForPassengerForm=")[1].split(";")[0]);
+                            OrderUtil.getOrderParam(object, orderParam);
+
+                            map.clear();
+                            map.put("cancel_flag", "2");
+                            map.put("bed_level_order_num", "000000000000000000000000000000");
+                            map.put("passengerTicketStr", orderParam.getPassengerTicketStr());
+                            map.put("oldPassengerStr", orderParam.getOldPassengerStr());
+                            map.put("tour_flag", "dc");
+                            map.put("randCode", "");
+                            map.put("_json_att", "");
+                            map.put("REPEAT_SUBMIT_TOKEN", orderParam.getREPEAT_SUBMIT_TOKEN());
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        return service.checkOrderInfo(map);
                     }
-                }
-                NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-                Notification notification = new Notification.Builder(MainActivity.this)
-                        .setContentTitle("Tickets")
-                        .setContentText("打开12306看看")
-                        .setSmallIcon(R.mipmap.ic_launcher)
-                        .setDefaults(Notification.DEFAULT_ALL)
-                        .build();
-                manager.notify(1, notification);
-            }
-        }).start();
+                })
+                .flatMap(new Func1<CheckOrderInfoResponse, Observable<ConfirmSingleForQueueResponse>>() {
+                    @Override
+                    public Observable<ConfirmSingleForQueueResponse> call(CheckOrderInfoResponse checkOrderInfoResponse) {
+                        if (checkOrderInfoResponse.getData().isSubmitStatus()) {
+                            map.clear();
+                            map.put("passengerTicketStr", orderParam.getPassengerTicketStr());
+                            map.put("oldPassengerStr", orderParam.getOldPassengerStr());
+                            map.put("randCode", orderParam.getRandCode());
+                            map.put("purpose_codes", orderParam.getPurpose_codes());
+                            map.put("key_check_isChange", orderParam.getKey_check_isChange());
+                            map.put("leftTicketStr", orderParam.getLeftTicketStr());
+                            map.put("train_location", orderParam.getTrain_location());
+                            map.put("choose_seats", orderParam.getChoose_seats());
+                            map.put("seatDetailType", orderParam.getSeatDetailType());
+                            map.put("roomType", orderParam.getRoomType());
+                            map.put("dwAll", orderParam.getDwAll());
+                            map.put("_json_att", orderParam.get_json_att());
+                            map.put("REPEAT_SUBMIT_TOKEN", orderParam.getREPEAT_SUBMIT_TOKEN());
+                            return service.confirmSingleForQueue(map);
+                        }
+                        return null;
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<ConfirmSingleForQueueResponse>() {
+                    @Override
+                    public void call(ConfirmSingleForQueueResponse confirmSingleForQueueResponse) {
+                        if (confirmSingleForQueueResponse.getData().isSubmitStatus()) {
+                            NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                            Notification notification = new Notification.Builder(MainActivity.this)
+                                    .setContentTitle("Tickets")
+                                    .setContentText("打开12306看看")
+                                    .setSmallIcon(R.mipmap.ic_launcher)
+                                    .setDefaults(Notification.DEFAULT_ALL)
+                                    .build();
+                            manager.notify(1, notification);
+                        }
+                    }
+                });
     }
 
     private void showShortToast(String s) {
@@ -638,5 +667,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         SubscriptionUtil.unSubscribe(querySubscription);
         SubscriptionUtil.unSubscribe(busSubscription);
         SubscriptionUtil.unSubscribe(loopSubscription);
+        SubscriptionUtil.unSubscribe(orderSubscription);
     }
 }

@@ -13,7 +13,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.akari.tickets.R;
@@ -484,12 +483,33 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         SubscriptionUtil.unSubscribe(querySubscription);
         final HttpService service = RetrofitManager.getInstance().getService();
         final QueryParam queryParam = getQueryParam();
+        String[] trainDates;
+        if (!queryParam.getDate2()[0].equals("")) {
+            trainDates = new String[queryParam.getDate2().length + 1];
+            trainDates[0] = queryParam.getTrain_date();
+            for (int i = 1; i < trainDates.length; i++) {
+                trainDates[i] = queryParam.getDate2()[i - 1];
+            }
+        }
+        else {
+            trainDates = new String[1];
+            trainDates[0] = queryParam.getTrain_date();
+        }
         loopSubscription = Observable.interval(1500, TimeUnit.MILLISECONDS)
                 .flatMap(new Func1<Long, Observable<QueryTrainsResponse>>() {
                     @Override
                     public Observable<QueryTrainsResponse> call(Long aLong) {
-                        System.out.println("正在查询..." + queryParam.getFrom_station() + " - " + queryParam.getTo_station() + "..." + (aLong + 1));
-                        return service.queryTrains(leftTicketUrl, queryParam.getTrain_date(), queryParam.getFrom_station_code(), queryParam.getTo_station_code(), queryParam.getPurpose_codes());
+                        String trainDate = queryParam.getTrain_date();
+                        if (!queryParam.getDate2()[0].equals("")) {
+                            long i = aLong % (queryParam.getDate2().length + 1);
+                            if (i == queryParam.getDate2().length) {
+                                trainDate = queryParam.getTrain_date();
+                            }
+                            else {
+                                trainDate = queryParam.getDate2()[(int)i];
+                            }
+                        }
+                        return service.queryTrains(leftTicketUrl, trainDate, queryParam.getFrom_station_code(), queryParam.getTo_station_code(), queryParam.getPurpose_codes());
                     }
                 })
                 .subscribeOn(Schedulers.io())

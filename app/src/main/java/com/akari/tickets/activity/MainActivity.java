@@ -70,9 +70,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final int GET_TO_STATION = 2;
     private static List<String> trains;
     private static String back_strain_date;
-    private TextView logText;
-    private ScrollView scrollView;
     private ImageView refresh;
+
+    private TextView trainCode;
+    private TextView rwNum;
+    private TextView ywNum;
+    private TextView yzNum;
+    private TextView wzNum;
+    private TextView queryCount;
 
     private Subscription querySubscription;
     private Subscription busSubscription;
@@ -81,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private String leftTicketUrl = "leftTicket/queryA";
     private static OrderParam orderParam;
     private static boolean breakChooseSeats = false;
+    private static int count = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,9 +101,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         chooseDate = (TextView) findViewById(R.id.choose_date);
         chooseDate2 = (TextView) findViewById(R.id.choose_date2);
         button = (Button) findViewById(R.id.button);
-        logText = (TextView) findViewById(R.id.log);
-        scrollView = (ScrollView) findViewById(R.id.scroll_view);
         refresh = (ImageView) findViewById(R.id.refresh);
+        trainCode = (TextView) findViewById(R.id.train_code);
+        rwNum = (TextView) findViewById(R.id.rw_num);
+        ywNum = (TextView) findViewById(R.id.yw_num);
+        yzNum = (TextView) findViewById(R.id.yz_num);
+        wzNum = (TextView) findViewById(R.id.wz_num);
+        queryCount = (TextView) findViewById(R.id.query_count);
         loadDefaultData();
 
         fromStation.setOnClickListener(this);
@@ -222,6 +232,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 }
                 else {
+                    count = 0;
                     SubscriptionUtil.unSubscribe(loopSubscription);
                     button.setText("开始查询");
                 }
@@ -486,7 +497,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .subscribe(new Action1<QueryTrainsResponse>() {
                     @Override
                     public void call(QueryTrainsResponse queryTrainsResponse) {
+                        queryCount.setText("第" + ++count + "次查询");
                         for (QueryTrainsResponse.Data data : queryTrainsResponse.getData()) {
+                            if (data.getQueryLeftNewDTO().getStation_train_code().equals(chooseTrains.getText().toString())) {
+                                trainCode.setText(chooseTrains.getText().toString());
+                                rwNum.setText(data.getQueryLeftNewDTO().getRw_num());
+                                ywNum.setText(data.getQueryLeftNewDTO().getYw_num());
+                                yzNum.setText(data.getQueryLeftNewDTO().getYz_num());
+                                wzNum.setText(data.getQueryLeftNewDTO().getWz_num());
+                            }
                             if (!data.getSecretStr().equals("")) {
                                 if (data.getQueryLeftNewDTO().getStation_train_code().equals(queryParam.getTrain_code())) {
                                     String[] seats = queryParam.getSeats();

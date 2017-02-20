@@ -119,7 +119,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         button.setOnClickListener(this);
         refresh.setOnClickListener(this);
 
-        registerBus();
+//        registerBus();
     }
 
     private void loadDefaultData() {
@@ -186,18 +186,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 });
     }
 
-    private void registerBus() {
-        SubscriptionUtil.unSubscribe(busSubscription);
-        busSubscription = RxBus.getDefault().toObservable()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Action1<Object>() {
-                    @Override
-                    public void call(Object o) {
-                        showShortToast(o.toString());
-                    }
-                });
-    }
+//    private void registerBus() {
+//        SubscriptionUtil.unSubscribe(busSubscription);
+//        busSubscription = RxBus.getDefault().toObservable()
+//                .subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(new Action1<Object>() {
+//                    @Override
+//                    public void call(Object o) {
+//                        showShortToast(o.toString());
+//                    }
+//                });
+//    }
 
     @Override
     public void onClick(View v) {
@@ -697,7 +697,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onRestart() {
         super.onRestart();
-        registerBus();
+//        registerBus();
     }
 
     @Override

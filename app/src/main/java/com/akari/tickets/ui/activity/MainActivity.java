@@ -4,6 +4,8 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -16,6 +18,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.akari.tickets.R;
+import com.akari.tickets.beans.QueryOrderWaitTimeResponse;
+import com.akari.tickets.beans.ResultOrderResponse;
 import com.akari.tickets.ui.adapter.Date2Adapter;
 import com.akari.tickets.ui.adapter.PassengersAdapter;
 import com.akari.tickets.ui.adapter.SeatsAdapter;
@@ -45,6 +49,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.ResponseBody;
@@ -79,12 +84,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private Subscription querySubscription;
     private Subscription busSubscription;
-    private Subscription loopSubscription;
+    private Subscription queryTrainLoopSubscription;
     private Subscription orderSubscription;
+    private Subscription queryWaitTimeLoopSubscription;
+    private Subscription orderCompleteSubscription;
     private String leftTicketUrl = "leftTicket/queryA";
     private static OrderParam orderParam;
     private static boolean breakChooseSeats = false;
     private static int count = 0;
+    private static Bitmap randCodeImg;
+    private static String randCode;
+    private static boolean showPassCode = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -231,7 +241,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 else {
                     count = 0;
-                    SubscriptionUtil.unSubscribe(loopSubscription);
+                    SubscriptionUtil.unSubscribe(queryTrainLoopSubscription);
                     button.setText("开始查询");
                 }
                 break;
@@ -478,7 +488,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void startQueryLoop() {
-        SubscriptionUtil.unSubscribe(loopSubscription);
+        SubscriptionUtil.unSubscribe(queryTrainLoopSubscription);
         SubscriptionUtil.unSubscribe(querySubscription);
         final HttpService service = RetrofitManager.getInstance().getService();
         final QueryParam queryParam = getQueryParam();
@@ -494,7 +504,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             trainDates = new String[1];
             trainDates[0] = queryParam.getTrain_date();
         }
-        loopSubscription = Observable.interval(1500, TimeUnit.MILLISECONDS)
+        queryTrainLoopSubscription = Observable.interval(1500, TimeUnit.MILLISECONDS)
                 .flatMap(new Func1<Long, Observable<QueryTrainsResponse>>() {
                     @Override
                     public Observable<QueryTrainsResponse> call(Long aLong) {
@@ -545,9 +555,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (seat) {
             case "软卧":
                 if (!queryLeftNewDTO.getRw_num().equals("无") && !queryLeftNewDTO.getRw_num().equals("--")) {
-                    SubscriptionUtil.unSubscribe(loopSubscription);
+                    SubscriptionUtil.unSubscribe(queryTrainLoopSubscription);
                     button.setText("开始查询");
-                    System.out.println("正在抢软卧...");
                     OrderUtil.seat_type_codes = "4";
                     breakChooseSeats = true;
                     submitOrder(secretStr, queryParam);
@@ -555,9 +564,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case "硬卧":
                 if (!queryLeftNewDTO.getYw_num().equals("无") && !queryLeftNewDTO.getYw_num().equals("--")) {
-                    SubscriptionUtil.unSubscribe(loopSubscription);
+                    SubscriptionUtil.unSubscribe(queryTrainLoopSubscription);
                     button.setText("开始查询");
-                    System.out.println("正在抢硬卧...");
                     OrderUtil.seat_type_codes = "3";
                     breakChooseSeats = true;
                     submitOrder(secretStr, queryParam);
@@ -565,9 +573,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case "硬座":
                 if (!queryLeftNewDTO.getYz_num().equals("无") && !queryLeftNewDTO.getYz_num().equals("--")) {
-                    SubscriptionUtil.unSubscribe(loopSubscription);
+                    SubscriptionUtil.unSubscribe(queryTrainLoopSubscription);
                     button.setText("开始查询");
-                    System.out.println("正在抢硬座...");
                     OrderUtil.seat_type_codes = "1";
                     breakChooseSeats = true;
                     submitOrder(secretStr, queryParam);
@@ -575,9 +582,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case "无座":
                 if (!queryLeftNewDTO.getWz_num().equals("无") && !queryLeftNewDTO.getWz_num().equals("--")) {
-                    SubscriptionUtil.unSubscribe(loopSubscription);
+                    SubscriptionUtil.unSubscribe(queryTrainLoopSubscription);
                     button.setText("开始查询");
-                    System.out.println("正在抢无座...");
                     OrderUtil.seat_type_codes = "1";
                     breakChooseSeats = true;
                     submitOrder(secretStr, queryParam);
@@ -607,9 +613,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         return service.initDc("");
                     }
                 })
-                .flatMap(new Func1<ResponseBody, Observable<CheckOrderInfoResponse>>() {
+                .flatMap(new Func1<ResponseBody, Observable<ResponseBody>>() {
                     @Override
-                    public Observable<CheckOrderInfoResponse> call(ResponseBody responseBody) {
+                    public Observable<ResponseBody> call(ResponseBody responseBody) {
                         try {
                             String response = responseBody.string();
                             String globalRepeatSubmitToken = response.split("globalRepeatSubmitToken = '")[1].split("';")[0];
@@ -632,49 +638,118 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
+                        return service.getPassCode("passenger", "randp");
+                    }
+                })
+                .flatMap(new Func1<ResponseBody, Observable<CheckOrderInfoResponse>>() {
+                    @Override
+                    public Observable<CheckOrderInfoResponse> call(ResponseBody responseBody) {
+                        randCodeImg = BitmapFactory.decodeStream(responseBody.byteStream());
                         return service.checkOrderInfo(map);
                     }
                 })
-                .flatMap(new Func1<CheckOrderInfoResponse, Observable<ConfirmSingleForQueueResponse>>() {
+                .map(new Func1<CheckOrderInfoResponse, Boolean>() {
                     @Override
-                    public Observable<ConfirmSingleForQueueResponse> call(CheckOrderInfoResponse checkOrderInfoResponse) {
-                        if (checkOrderInfoResponse.getData().isSubmitStatus()) {
-                            map.clear();
-                            map.put("passengerTicketStr", orderParam.getPassengerTicketStr());
-                            map.put("oldPassengerStr", orderParam.getOldPassengerStr());
-                            map.put("randCode", orderParam.getRandCode());
-                            map.put("purpose_codes", orderParam.getPurpose_codes());
-                            map.put("key_check_isChange", orderParam.getKey_check_isChange());
-                            map.put("leftTicketStr", orderParam.getLeftTicketStr());
-                            map.put("train_location", orderParam.getTrain_location());
-                            map.put("choose_seats", orderParam.getChoose_seats());
-                            map.put("seatDetailType", orderParam.getSeatDetailType());
-                            map.put("roomType", orderParam.getRoomType());
-                            map.put("dwAll", orderParam.getDwAll());
-                            map.put("_json_att", orderParam.get_json_att());
-                            map.put("REPEAT_SUBMIT_TOKEN", orderParam.getREPEAT_SUBMIT_TOKEN());
-                            return service.confirmSingleForQueue(map);
+                    public Boolean call(CheckOrderInfoResponse checkOrderInfoResponse) {
+                        CheckOrderInfoResponse.Data data = checkOrderInfoResponse.getData();
+                        if (data.isSubmitStatus()) {
+                            if (checkOrderInfoResponse.getData().getIfShowPassCode().equals("N")) {
+                                map.clear();
+                                map.put("passengerTicketStr", orderParam.getPassengerTicketStr());
+                                map.put("oldPassengerStr", orderParam.getOldPassengerStr());
+                                map.put("randCode", orderParam.getRandCode());
+                                map.put("purpose_codes", orderParam.getPurpose_codes());
+                                map.put("key_check_isChange", orderParam.getKey_check_isChange());
+                                map.put("leftTicketStr", orderParam.getLeftTicketStr());
+                                map.put("train_location", orderParam.getTrain_location());
+                                map.put("choose_seats", orderParam.getChoose_seats());
+                                map.put("seatDetailType", orderParam.getSeatDetailType());
+                                map.put("roomType", orderParam.getRoomType());
+                                map.put("dwAll", orderParam.getDwAll());
+                                map.put("_json_att", orderParam.get_json_att());
+                                map.put("REPEAT_SUBMIT_TOKEN", orderParam.getREPEAT_SUBMIT_TOKEN());
+                            }
+                            else if (data.getIfShowPassCode().equals("Y")) {
+                                showPassCode = true;
+                            }
                         }
-                        return null;
+                        return showPassCode;
                     }
                 })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<Boolean>() {
+                    @Override
+                    public void call(Boolean showCode) {
+                        if (showCode) {
+                            showPassCode = false;
+                        }
+                        else {
+                            submitOrderNext(service, map, orderParam.getREPEAT_SUBMIT_TOKEN());
+                        }
+                    }
+                });
+    }
+
+    private void submitOrderNext(final HttpService service, Map<String, String> map, final String token) {
+        service.confirmSingleForQueue(map)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Action1<ConfirmSingleForQueueResponse>() {
                     @Override
                     public void call(ConfirmSingleForQueueResponse confirmSingleForQueueResponse) {
                         if (confirmSingleForQueueResponse.getData().isSubmitStatus()) {
-                            NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-                            Notification notification = new Notification.Builder(MainActivity.this)
-                                    .setContentTitle("Tickets")
-                                    .setContentText("打开12306看看")
-                                    .setSmallIcon(R.mipmap.ic_launcher)
-                                    .setDefaults(Notification.DEFAULT_ALL)
-                                    .build();
-                            manager.notify(1, notification);
+                            queryOrderWaitTimeLoop(service, token);
                         }
                     }
                 });
+    }
+
+    private void queryOrderWaitTimeLoop(final HttpService service, final String token) {
+        SubscriptionUtil.unSubscribe(queryWaitTimeLoopSubscription);
+        queryWaitTimeLoopSubscription = Observable.interval(100, TimeUnit.MILLISECONDS)
+                .flatMap(new Func1<Long, Observable<QueryOrderWaitTimeResponse>>() {
+                    @Override
+                    public Observable<QueryOrderWaitTimeResponse> call(Long aLong) {
+                        return service.queryOrderWaitTime(getRandom(), "dc", "", token);
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<QueryOrderWaitTimeResponse>() {
+                    @Override
+                    public void call(QueryOrderWaitTimeResponse queryOrderWaitTimeResponse) {
+                        QueryOrderWaitTimeResponse.Data data = queryOrderWaitTimeResponse.getData();
+                        if (data.getWaitTime() < 0) {
+                            submitOrderCompleted(service, data.getOrderId(), token);
+                        }
+                    }
+                });
+    }
+
+    private void submitOrderCompleted(HttpService service, String orderId, String token) {
+        SubscriptionUtil.unSubscribe(queryWaitTimeLoopSubscription);
+        orderCompleteSubscription = service.resultOrderForDcQueue(orderId, "", token)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<ResultOrderResponse>() {
+                    @Override
+                    public void call(ResultOrderResponse resultOrderResponse) {
+                        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                        Notification notification = new Notification.Builder(MainActivity.this)
+                                .setContentTitle("Tickets")
+                                .setContentText("打开12306看看")
+                                .setSmallIcon(R.mipmap.ic_launcher)
+                                .setDefaults(Notification.DEFAULT_ALL)
+                                .build();
+                        manager.notify(1, notification);
+                    }
+                });
+    }
+
+    private String getRandom() {
+        String s = new Random().nextDouble() + "";
+        return s.split("\\.")[1].substring(0, 13);
     }
 
     private void showShortToast(String s) {
@@ -690,6 +765,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onStop() {
         super.onStop();
+        SubscriptionUtil.unSubscribe(querySubscription);
+        SubscriptionUtil.unSubscribe(orderSubscription);
+        SubscriptionUtil.unSubscribe(orderCompleteSubscription);
         SubscriptionUtil.unSubscribe(busSubscription);
     }
 
@@ -702,9 +780,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        SubscriptionUtil.unSubscribe(querySubscription);
-        SubscriptionUtil.unSubscribe(busSubscription);
-        SubscriptionUtil.unSubscribe(loopSubscription);
-        SubscriptionUtil.unSubscribe(orderSubscription);
     }
 }

@@ -1,10 +1,10 @@
 package com.akari.tickets.beans;
 
 /**
- * Created by Akari on 2017/2/19.
+ * Created by Akari on 2017/2/25.
  */
 
-public class CheckOrderInfoResponse {
+public class ResultOrderResponse {
     private Data data;
 
     public Data getData() {
@@ -17,7 +17,6 @@ public class CheckOrderInfoResponse {
 
     public static class Data {
         private boolean submitStatus;
-        private String ifShowPassCode;
 
         public boolean isSubmitStatus() {
             return submitStatus;
@@ -25,14 +24,6 @@ public class CheckOrderInfoResponse {
 
         public void setSubmitStatus(boolean submitStatus) {
             this.submitStatus = submitStatus;
-        }
-
-        public String getIfShowPassCode() {
-            return ifShowPassCode;
-        }
-
-        public void setIfShowPassCode(String ifShowPassCode) {
-            this.ifShowPassCode = ifShowPassCode;
         }
     }
 }

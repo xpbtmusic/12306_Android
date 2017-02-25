@@ -1,4 +1,4 @@
-package com.akari.tickets.adapter;
+package com.akari.tickets.ui.adapter;
 
 import android.content.Context;
 import android.view.View;
@@ -8,52 +8,34 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 
 import com.akari.tickets.R;
-import com.akari.tickets.utils.DateUtil;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 
 /**
- * Created by Akari on 2016/12/31.
+ * Created by Akari on 2016/12/30.
  */
 
-public class Date2Adapter extends BaseAdapter {
+public class PassengersAdapter extends BaseAdapter {
 
     private Context context;
-    public static String[] date2 = new String[4];
+    private List<String> list;
     public static List<Boolean> checkStatus;
 
-    public Date2Adapter(Context context, int year, int month, int day) {
+    public PassengersAdapter(Context context, List<String> list) {
         this.context = context;
-        initData(year, month, day);
-    }
-
-    private void initData(int year, int month, int day) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(year, month - 1, day - 2);
-        date2[0] = DateUtil.getDateStr(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
-        calendar.set(year, month - 1, day - 1);
-        date2[1] = DateUtil.getDateStr(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
-        calendar.set(year, month - 1, day + 1);
-        date2[2] = DateUtil.getDateStr(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
-        calendar.set(year, month - 1, day + 2);
-        date2[3] = DateUtil.getDateStr(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
-
-        checkStatus = new ArrayList<>();
-        for (int i = 0; i < date2.length; i++) {
-            checkStatus.add(false);
-        }
+        this.list = list;
+        initCheckStatus();
     }
 
     @Override
     public int getCount() {
-        return date2.length;
+        return list.size();
     }
 
     @Override
     public Object getItem(int position) {
-        return date2[position];
+        return list.get(position);
     }
 
     @Override
@@ -65,7 +47,7 @@ public class Date2Adapter extends BaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         View view;
         if (convertView == null) {
-            view = View.inflate(context, R.layout.item_date2, null);
+            view = View.inflate(context, R.layout.item_passengers, null);
         }
         else {
             view = convertView;
@@ -74,9 +56,16 @@ public class Date2Adapter extends BaseAdapter {
         return view;
     }
 
+    private void initCheckStatus() {
+        checkStatus = new ArrayList<>();
+        for (int i = 0; i < list.size(); i++) {
+            checkStatus.add(false);
+        }
+    }
+
     private void getCheckStatus(View view, final int position) {
         CheckBox checkBox = (CheckBox) view.findViewById(R.id.checkbox);
-        checkBox.setText(date2[position]);
+        checkBox.setText(list.get(position));
         checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {

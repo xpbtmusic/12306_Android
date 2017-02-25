@@ -1,4 +1,4 @@
-package com.akari.tickets.adapter;
+package com.akari.tickets.ui.adapter;
 
 import android.content.Context;
 import android.view.View;

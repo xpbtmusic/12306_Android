@@ -1,4 +1,4 @@
-package com.akari.tickets.adapter;
+package com.akari.tickets.ui.adapter;
 
 import android.content.Context;
 import android.view.View;
@@ -7,7 +7,7 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import com.akari.tickets.R;
-import com.akari.tickets.constants.Constants;
+import com.akari.tickets.utils.constants.Constants;
 
 /**
  * Created by Akari on 2017/1/1.

@@ -1,7 +1,7 @@
-package com.akari.tickets.http;
+package com.akari.tickets.network;
 
-import com.akari.tickets.http.interceptor.AddCookieInterceptor;
-import com.akari.tickets.http.interceptor.ReceiveCookieInterceptor;
+import com.akari.tickets.network.interceptor.AddCookieInterceptor;
+import com.akari.tickets.network.interceptor.ReceiveCookieInterceptor;
 import com.zhy.http.okhttp.https.HttpsUtils;
 
 import java.util.concurrent.TimeUnit;

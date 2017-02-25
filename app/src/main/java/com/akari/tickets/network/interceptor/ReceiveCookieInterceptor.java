@@ -1,6 +1,6 @@
-package com.akari.tickets.http.interceptor;
+package com.akari.tickets.network.interceptor;
 
-import com.akari.tickets.http.RetrofitManager;
+import com.akari.tickets.network.RetrofitManager;
 
 import java.io.IOException;
 import java.util.List;

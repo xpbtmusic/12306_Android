@@ -1,4 +1,4 @@
-package com.akari.tickets.adapter;
+package com.akari.tickets.ui.adapter;
 
 import android.content.Context;
 import android.view.View;
@@ -16,26 +16,25 @@ import java.util.List;
  * Created by Akari on 2016/12/30.
  */
 
-public class PassengersAdapter extends BaseAdapter {
+public class SeatsAdapter extends BaseAdapter {
 
     private Context context;
-    private List<String> list;
+    public static String[] seats = {"软卧", "硬卧", "硬座", "无座"};
     public static List<Boolean> checkStatus;
 
-    public PassengersAdapter(Context context, List<String> list) {
+    public SeatsAdapter(Context context) {
         this.context = context;
-        this.list = list;
         initCheckStatus();
     }
 
     @Override
     public int getCount() {
-        return list.size();
+        return seats.length;
     }
 
     @Override
     public Object getItem(int position) {
-        return list.get(position);
+        return seats[position];
     }
 
     @Override
@@ -47,7 +46,7 @@ public class PassengersAdapter extends BaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         View view;
         if (convertView == null) {
-            view = View.inflate(context, R.layout.item_passengers, null);
+            view = View.inflate(context, R.layout.item_seats, null);
         }
         else {
             view = convertView;
@@ -58,14 +57,14 @@ public class PassengersAdapter extends BaseAdapter {
 
     private void initCheckStatus() {
         checkStatus = new ArrayList<>();
-        for (int i = 0; i < list.size(); i++) {
+        for (int i = 0; i < seats.length; i++) {
             checkStatus.add(false);
         }
     }
 
     private void getCheckStatus(View view, final int position) {
         CheckBox checkBox = (CheckBox) view.findViewById(R.id.checkbox);
-        checkBox.setText(list.get(position));
+        checkBox.setText(seats[position]);
         checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {

@@ -1,4 +1,4 @@
-package com.akari.tickets.fragment;
+package com.akari.tickets.ui.fragment;
 
 
 import android.app.DatePickerDialog;

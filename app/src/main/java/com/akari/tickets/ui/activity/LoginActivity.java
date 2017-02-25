@@ -1,4 +1,4 @@
-package com.akari.tickets.activity;
+package com.akari.tickets.ui.activity;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -16,8 +16,8 @@ import android.widget.ImageView;
 import com.akari.tickets.R;
 import com.akari.tickets.beans.CheckRandCodeResponse;
 import com.akari.tickets.beans.LoginSuggestResponse;
-import com.akari.tickets.http.RetrofitManager;
-import com.akari.tickets.http.HttpService;
+import com.akari.tickets.network.RetrofitManager;
+import com.akari.tickets.network.HttpService;
 import com.akari.tickets.utils.PassengerUtil;
 import com.akari.tickets.utils.StationCodeUtil;
 import com.akari.tickets.utils.SubscriptionUtil;

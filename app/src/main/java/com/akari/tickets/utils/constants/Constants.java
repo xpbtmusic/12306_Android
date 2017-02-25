@@ -1,4 +1,4 @@
-package com.akari.tickets.constants;
+package com.akari.tickets.utils.constants;
 
 /**
  * Created by Akari on 2017/1/1.

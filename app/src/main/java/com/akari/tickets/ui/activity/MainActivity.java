@@ -1,4 +1,4 @@
-package com.akari.tickets.activity;
+package com.akari.tickets.ui.activity;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -16,10 +16,10 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.akari.tickets.R;
-import com.akari.tickets.adapter.Date2Adapter;
-import com.akari.tickets.adapter.PassengersAdapter;
-import com.akari.tickets.adapter.SeatsAdapter;
-import com.akari.tickets.adapter.TrainsAdapter;
+import com.akari.tickets.ui.adapter.Date2Adapter;
+import com.akari.tickets.ui.adapter.PassengersAdapter;
+import com.akari.tickets.ui.adapter.SeatsAdapter;
+import com.akari.tickets.ui.adapter.TrainsAdapter;
 import com.akari.tickets.beans.CheckOrderInfoResponse;
 import com.akari.tickets.beans.ConfirmSingleForQueueResponse;
 import com.akari.tickets.beans.OrderParam;
@@ -27,10 +27,9 @@ import com.akari.tickets.beans.Passenger;
 import com.akari.tickets.beans.QueryLeftNewDTO;
 import com.akari.tickets.beans.QueryParam;
 import com.akari.tickets.beans.QueryTrainsResponse;
-import com.akari.tickets.fragment.DatePickerFragment;
-import com.akari.tickets.http.HttpService;
-import com.akari.tickets.http.RetrofitManager;
-import com.akari.tickets.rxbus.RxBus;
+import com.akari.tickets.ui.fragment.DatePickerFragment;
+import com.akari.tickets.network.HttpService;
+import com.akari.tickets.network.RetrofitManager;
 import com.akari.tickets.utils.DateUtil;
 import com.akari.tickets.utils.OrderUtil;
 import com.akari.tickets.utils.PassengerUtil;

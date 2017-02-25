@@ -1,4 +1,4 @@
-package com.akari.tickets.http;
+package com.akari.tickets.network;
 
 import com.akari.tickets.beans.CheckOrderInfoResponse;
 import com.akari.tickets.beans.CheckRandCodeResponse;

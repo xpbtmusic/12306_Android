@@ -7,7 +7,7 @@
     android:paddingLeft="16dp"
     android:paddingRight="16dp"
     android:paddingTop="16dp"
-    tools:context="com.akari.tickets.activity.LoginActivity">
+    tools:context="com.akari.tickets.ui.ui.activity.LoginActivity">
     
     <EditText
         android:id="@+id/username"

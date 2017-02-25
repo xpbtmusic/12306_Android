@@ -1,4 +1,4 @@
-package com.akari.tickets.activity;
+package com.akari.tickets.ui.activity;
 
 import android.content.Intent;
 import android.support.v7.app.ActionBar;
@@ -12,7 +12,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.akari.tickets.R;
-import com.akari.tickets.adapter.StationAdapter;
+import com.akari.tickets.ui.adapter.StationAdapter;
 import com.bigkoo.quicksidebar.QuickSideBarTipsView;
 import com.bigkoo.quicksidebar.QuickSideBarView;
 import com.bigkoo.quicksidebar.listener.OnQuickSideBarTouchListener;

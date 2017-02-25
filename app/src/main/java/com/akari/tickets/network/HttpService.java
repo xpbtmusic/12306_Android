@@ -35,10 +35,13 @@ public interface HttpService {
     @GET("passcodeNew/getPassCodeNew")
     Observable<ResponseBody> getPassCode(@Query("module") String module, @Query("rand") String rand);
 
-    @Headers("Cache-Control: no-cache")
     @FormUrlEncoded
     @POST("passcodeNew/checkRandCodeAnsyn")
     Observable<CheckRandCodeResponse> checkRandCode(@Field(value = "randCode", encoded = true) String randCode, @Field("rand") String rand);
+
+    @FormUrlEncoded
+    @POST("passcodeNew/checkRandCodeAnsyn")
+    Observable<CheckRandCodeResponse> checkRandCode2(@Field(value = "randCode", encoded = true) String randCode, @Field("rand") String rand, @Field("_json_att") String _json_att, @Field("REPEAT_SUBMIT_TOKEN") String token);
 
     @FormUrlEncoded
     @POST("login/loginAysnSuggest")
@@ -76,6 +79,7 @@ public interface HttpService {
     @POST("confirmPassenger/confirmSingleForQueue")
     Observable<ConfirmSingleForQueueResponse> confirmSingleForQueue(@FieldMap Map<String, String> field);
 
+    @Headers("Cache-Control: no-cache")
     @GET("confirmPassenger/queryOrderWaitTime")
     Observable<QueryOrderWaitTimeResponse> queryOrderWaitTime(@Query("random") String random, @Query("tourFlag") String tourFlag, @Query("_json_att") String _json_att, @Query("REPEAT_SUBMIT_TOKEN") String token);
 

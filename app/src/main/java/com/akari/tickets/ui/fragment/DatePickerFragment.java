@@ -1,6 +1,5 @@
 package com.akari.tickets.ui.fragment;
 
-
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.os.Bundle;
@@ -10,8 +9,6 @@ import android.widget.TextView;
 
 import com.akari.tickets.R;
 import com.akari.tickets.utils.DateUtil;
-
-
 
 public class DatePickerFragment extends DialogFragment implements DatePickerDialog.OnDateSetListener {
     private TextView chooseDate;
@@ -28,10 +25,9 @@ public class DatePickerFragment extends DialogFragment implements DatePickerDial
         int day = Integer.parseInt(date.split("-")[2]);
 
         DatePickerDialog dialog = new DatePickerDialog(getContext(), this, year, month - 1, day);
-        dialog.getDatePicker().setMinDate(System.currentTimeMillis());
+        dialog.getDatePicker().setMinDate(System.currentTimeMillis() - 1000);
         dialog.getDatePicker().setMaxDate(System.currentTimeMillis() + (long) 29 * 24 * 60 * 60 * 1000);
         dialog.setTitle(null);
-
         return dialog;
     }
 

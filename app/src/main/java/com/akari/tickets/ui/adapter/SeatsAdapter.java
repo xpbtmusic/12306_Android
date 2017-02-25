@@ -19,7 +19,7 @@ import java.util.List;
 public class SeatsAdapter extends BaseAdapter {
 
     private Context context;
-    public static String[] seats = {"软卧", "硬卧", "硬座", "无座"};
+    public static List<String> list;
     public static List<Boolean> checkStatus;
 
     public SeatsAdapter(Context context) {
@@ -29,12 +29,12 @@ public class SeatsAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return seats.length;
+        return list.size();
     }
 
     @Override
     public Object getItem(int position) {
-        return seats[position];
+        return list.get(position);
     }
 
     @Override
@@ -56,15 +56,20 @@ public class SeatsAdapter extends BaseAdapter {
     }
 
     private void initCheckStatus() {
+        list = new ArrayList<>();
+        list.add("软卧");
+        list.add("硬卧");
+        list.add("硬座");
+        list.add("无座");
         checkStatus = new ArrayList<>();
-        for (int i = 0; i < seats.length; i++) {
+        for (int i = 0; i < list.size(); i++) {
             checkStatus.add(false);
         }
     }
 
     private void getCheckStatus(View view, final int position) {
         CheckBox checkBox = (CheckBox) view.findViewById(R.id.checkbox);
-        checkBox.setText(seats[position]);
+        checkBox.setText(list.get(position));
         checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {

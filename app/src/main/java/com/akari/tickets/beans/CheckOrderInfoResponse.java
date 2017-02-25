@@ -18,6 +18,7 @@ public class CheckOrderInfoResponse {
     public static class Data {
         private boolean submitStatus;
         private String ifShowPassCode;
+        private String errMsg;
 
         public boolean isSubmitStatus() {
             return submitStatus;
@@ -33,6 +34,14 @@ public class CheckOrderInfoResponse {
 
         public void setIfShowPassCode(String ifShowPassCode) {
             this.ifShowPassCode = ifShowPassCode;
+        }
+
+        public String getErrMsg() {
+            return errMsg;
+        }
+
+        public void setErrMsg(String errMsg) {
+            this.errMsg = errMsg;
         }
     }
 }

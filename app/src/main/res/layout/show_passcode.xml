@@ -1,56 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingLeft="16dp"
-    android:paddingRight="16dp"
-    android:paddingTop="16dp"
-    tools:context="com.akari.tickets.ui.activity.LoginActivity">
-    
-    <EditText
-        android:id="@+id/username"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:hint="用户名"
-        android:textSize="14sp"/>
-    <EditText
-        android:id="@+id/password"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/username"
-        android:layout_marginTop="16dp"
-        android:hint="密码"
-        android:inputType="textPassword"
-        android:textSize="14sp"/>
+    android:padding="16dp">
     <ImageView
-        android:id="@+id/captcha"
+        android:id="@+id/passcode"
         android:layout_width="293dp"
-        android:layout_height="190dp"
-        android:layout_below="@id/password"
-        android:layout_marginTop="32dp"
-        android:layout_centerHorizontal="true"/>
-    <Button
-        android:id="@+id/btn_login"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/colorPrimary"
-        android:textColor="@android:color/white"
-        android:layout_alignParentBottom="true"
-        android:padding="16dp"
-        android:layout_marginBottom="16dp"
-        android:textSize="14sp"
-        android:text="登录"/>
-
+        android:layout_height="190dp" />
     <ImageView
         android:id="@+id/selected1"
         android:layout_width="16dp"
         android:layout_height="16dp"
-        android:layout_alignTop="@id/captcha"
+        android:layout_alignTop="@id/passcode"
         android:layout_marginTop="90dp"
-        android:layout_marginLeft="72dp"
+        android:layout_marginLeft="51dp"
         android:visibility="invisible"
         android:src="@mipmap/selected" />
     <ImageView
@@ -58,7 +21,7 @@
         android:layout_width="16dp"
         android:layout_height="16dp"
         android:layout_alignBottom="@id/selected1"
-        android:layout_marginLeft="144dp"
+        android:layout_marginLeft="119dp"
         android:visibility="invisible"
         android:src="@mipmap/selected"/>
     <ImageView
@@ -66,7 +29,7 @@
         android:layout_width="16dp"
         android:layout_height="16dp"
         android:layout_alignBottom="@id/selected1"
-        android:layout_marginLeft="216dp"
+        android:layout_marginLeft="187dp"
         android:visibility="invisible"
         android:src="@mipmap/selected"/>
     <ImageView
@@ -74,15 +37,15 @@
         android:layout_width="16dp"
         android:layout_height="16dp"
         android:layout_alignBottom="@id/selected1"
-        android:layout_marginLeft="288dp"
+        android:layout_marginLeft="255dp"
         android:visibility="invisible"
         android:src="@mipmap/selected"/>
     <ImageView
         android:id="@+id/selected5"
         android:layout_width="16dp"
         android:layout_height="16dp"
-        android:layout_alignBottom="@id/captcha"
-        android:layout_marginBottom="12dp"
+        android:layout_alignBottom="@id/passcode"
+        android:layout_marginBottom="16dp"
         android:layout_alignLeft="@id/selected1"
         android:visibility="invisible"
         android:src="@mipmap/selected"/>
@@ -90,8 +53,8 @@
         android:id="@+id/selected6"
         android:layout_width="16dp"
         android:layout_height="16dp"
-        android:layout_alignBottom="@id/captcha"
-        android:layout_marginBottom="12dp"
+        android:layout_alignBottom="@id/passcode"
+        android:layout_marginBottom="16dp"
         android:layout_alignLeft="@id/selected2"
         android:visibility="invisible"
         android:src="@mipmap/selected"/>
@@ -99,8 +62,8 @@
         android:id="@+id/selected7"
         android:layout_width="16dp"
         android:layout_height="16dp"
-        android:layout_alignBottom="@id/captcha"
-        android:layout_marginBottom="12dp"
+        android:layout_alignBottom="@id/passcode"
+        android:layout_marginBottom="16dp"
         android:layout_alignLeft="@id/selected3"
         android:visibility="invisible"
         android:src="@mipmap/selected"/>
@@ -108,8 +71,8 @@
         android:id="@+id/selected8"
         android:layout_width="16dp"
         android:layout_height="16dp"
-        android:layout_alignBottom="@id/captcha"
-        android:layout_marginBottom="12dp"
+        android:layout_alignBottom="@id/passcode"
+        android:layout_marginBottom="16dp"
         android:layout_alignLeft="@id/selected4"
         android:visibility="invisible"
         android:src="@mipmap/selected"/>

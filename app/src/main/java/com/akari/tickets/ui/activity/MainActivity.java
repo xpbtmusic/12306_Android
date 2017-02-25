@@ -11,6 +11,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -18,6 +19,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.akari.tickets.R;
+import com.akari.tickets.beans.CheckRandCodeResponse;
 import com.akari.tickets.beans.QueryOrderWaitTimeResponse;
 import com.akari.tickets.beans.ResultOrderResponse;
 import com.akari.tickets.ui.adapter.Date2Adapter;
@@ -34,9 +36,11 @@ import com.akari.tickets.beans.QueryTrainsResponse;
 import com.akari.tickets.ui.fragment.DatePickerFragment;
 import com.akari.tickets.network.HttpService;
 import com.akari.tickets.network.RetrofitManager;
+import com.akari.tickets.utils.AlertDialogUtil;
 import com.akari.tickets.utils.DateUtil;
 import com.akari.tickets.utils.OrderUtil;
 import com.akari.tickets.utils.PassengerUtil;
+import com.akari.tickets.utils.RandCodeUtil;
 import com.akari.tickets.utils.StationCodeUtil;
 import com.akari.tickets.utils.SubscriptionUtil;
 import com.akari.tickets.utils.ToastUtil;
@@ -86,15 +90,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Subscription busSubscription;
     private Subscription queryTrainLoopSubscription;
     private Subscription orderSubscription;
+    private Subscription getPassCodeSubscription;
     private Subscription queryWaitTimeLoopSubscription;
     private Subscription orderCompleteSubscription;
     private String leftTicketUrl = "leftTicket/queryA";
     private static OrderParam orderParam;
+    private static Map<String, String> map;
     private static boolean breakChooseSeats = false;
     private static int count = 0;
     private static Bitmap randCodeImg;
-    private static String randCode;
+    private static String randCode = "";
     private static boolean showPassCode = false;
+
+    private ImageView imageView;
+    private ImageView selected1;
+    private ImageView selected2;
+    private ImageView selected3;
+    private ImageView selected4;
+    private ImageView selected5;
+    private ImageView selected6;
+    private ImageView selected7;
+    private ImageView selected8;
+    private List<ImageView> list;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -234,13 +251,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.button:
                 if (button.getText().toString().equals("开始查询")) {
+                    count = 0;
                     if (preCheckThrough()) {
                         button.setText("停止查询");
                         startQueryLoop();
                     }
                 }
                 else {
-                    count = 0;
                     SubscriptionUtil.unSubscribe(queryTrainLoopSubscription);
                     button.setText("开始查询");
                 }
@@ -318,7 +335,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void buildChoosePassengersDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-
         View view = View.inflate(MainActivity.this, R.layout.choose_passengers, null);
         ListView listView = (ListView) view.findViewById(R.id.list_view);
 
@@ -327,17 +343,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         for (Passenger p : passengers) {
             list.add(p.getPassenger_name());
         }
-
         listView.setAdapter(new PassengersAdapter(MainActivity.this, list));
 
         builder.setTitle("选择乘车人");
         builder.setView(view);
-        builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+        AlertDialogUtil.setButton(builder, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 StringBuilder builder = new StringBuilder();
                 boolean first = true;
-
                 for (int i = 0; i < list.size(); i ++) {
                     if (PassengersAdapter.checkStatus.get(i)) {
                         if (first) {
@@ -353,30 +367,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 choosePassengers.setText(builder.toString());
             }
         });
-        builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-
-            }
-        });
         builder.show();
     }
 
     private void buildChooseTrainsDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-
         View view = View.inflate(MainActivity.this, R.layout.choose_trains, null);
         ListView listView = (ListView) view.findViewById(R.id.list_view);
         listView.setAdapter(new TrainsAdapter(MainActivity.this, trains));
 
         builder.setTitle("选择车次");
         builder.setView(view);
-        builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+        AlertDialogUtil.setButton(builder, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 StringBuilder builder = new StringBuilder();
                 boolean first = true;
-
                 for (int i = 0; i < trains.size(); i ++) {
                     if (TrainsAdapter.checkStatus.get(i)) {
                         if (first) {
@@ -392,48 +398,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 chooseTrains.setText(builder.toString());
             }
         });
-        builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-
-            }
-        });
         builder.show();
     }
 
     private void buildChooseSeatsDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-
         View view = View.inflate(MainActivity.this, R.layout.choose_seats, null);
         ListView listView = (ListView) view.findViewById(R.id.list_view);
         listView.setAdapter(new SeatsAdapter(MainActivity.this));
 
         builder.setTitle("选择席别");
         builder.setView(view);
-        builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+        AlertDialogUtil.setButton(builder, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 StringBuilder builder = new StringBuilder();
                 boolean first = true;
-                for (int i = 0; i < SeatsAdapter.seats.length; i ++) {
+                for (int i = 0; i < SeatsAdapter.list.size(); i ++) {
                     if (SeatsAdapter.checkStatus.get(i)) {
                         if (first) {
-                            builder.append(SeatsAdapter.seats[i]);
+                            builder.append(SeatsAdapter.list.get(i));
                             first = false;
                         }
                         else {
                             builder.append(", ");
-                            builder.append(SeatsAdapter.seats[i]);
+                            builder.append(SeatsAdapter.list.get(i));
                         }
                     }
                 }
                 chooseSeats.setText(builder.toString());
-            }
-        });
-        builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-
             }
         });
         builder.show();
@@ -451,37 +444,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int day = Integer.parseInt(date.split("-")[2]);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-
         View view = View.inflate(MainActivity.this, R.layout.choose_date2, null);
         ListView listView = (ListView) view.findViewById(R.id.list_view);
         listView.setAdapter(new Date2Adapter(MainActivity.this, year, month, day));
 
         builder.setTitle("备选日期");
         builder.setView(view);
-        builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+        AlertDialogUtil.setButton(builder, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 StringBuilder builder = new StringBuilder();
                 boolean first = true;
-                for (int i = 0; i < Date2Adapter.date2.length; i ++) {
+                for (int i = 0; i < Date2Adapter.list.size(); i ++) {
                     if (Date2Adapter.checkStatus.get(i)) {
                         if (first) {
-                            builder.append(Date2Adapter.date2[i]);
+                            builder.append(Date2Adapter.list.get(i));
                             first = false;
                         }
                         else {
                             builder.append(", ");
-                            builder.append(Date2Adapter.date2[i]);
+                            builder.append(Date2Adapter.list.get(i));
                         }
                     }
                 }
                 chooseDate2.setText(builder.toString());
-            }
-        });
-        builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-
             }
         });
         builder.show();
@@ -595,7 +581,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void submitOrder(String secretStr, QueryParam queryParam) {
-        final Map<String, String> map = new HashMap<>();
+        map = new HashMap<>();
         map.put("secretStr", secretStr);
         map.put("train_date", queryParam.getTrain_date());
         map.put("back_train_date", queryParam.getBack_train_date());
@@ -653,25 +639,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     public Boolean call(CheckOrderInfoResponse checkOrderInfoResponse) {
                         CheckOrderInfoResponse.Data data = checkOrderInfoResponse.getData();
                         if (data.isSubmitStatus()) {
-                            if (checkOrderInfoResponse.getData().getIfShowPassCode().equals("N")) {
-                                map.clear();
-                                map.put("passengerTicketStr", orderParam.getPassengerTicketStr());
-                                map.put("oldPassengerStr", orderParam.getOldPassengerStr());
-                                map.put("randCode", orderParam.getRandCode());
-                                map.put("purpose_codes", orderParam.getPurpose_codes());
-                                map.put("key_check_isChange", orderParam.getKey_check_isChange());
-                                map.put("leftTicketStr", orderParam.getLeftTicketStr());
-                                map.put("train_location", orderParam.getTrain_location());
-                                map.put("choose_seats", orderParam.getChoose_seats());
-                                map.put("seatDetailType", orderParam.getSeatDetailType());
-                                map.put("roomType", orderParam.getRoomType());
-                                map.put("dwAll", orderParam.getDwAll());
-                                map.put("_json_att", orderParam.get_json_att());
-                                map.put("REPEAT_SUBMIT_TOKEN", orderParam.getREPEAT_SUBMIT_TOKEN());
-                            }
-                            else if (data.getIfShowPassCode().equals("Y")) {
+                            if (data.getIfShowPassCode().equals("Y")) {
                                 showPassCode = true;
                             }
+                        }
+                        else {
+                            showLongToast(data.getErrMsg());
                         }
                         return showPassCode;
                     }
@@ -683,15 +656,101 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     public void call(Boolean showCode) {
                         if (showCode) {
                             showPassCode = false;
+                            buildPassCodeDialog();
                         }
                         else {
-                            submitOrderNext(service, map, orderParam.getREPEAT_SUBMIT_TOKEN());
+                            submitOrderNext(service, orderParam.getREPEAT_SUBMIT_TOKEN());
                         }
                     }
                 });
     }
 
-    private void submitOrderNext(final HttpService service, Map<String, String> map, final String token) {
+    private void buildPassCodeDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        View view = View.inflate(MainActivity.this, R.layout.show_passcode, null);
+        imageView = (ImageView) view.findViewById(R.id.passcode);
+        selected1 = (ImageView) view.findViewById(R.id.selected1);
+        selected2 = (ImageView) view.findViewById(R.id.selected2);
+        selected3 = (ImageView) view.findViewById(R.id.selected3);
+        selected4 = (ImageView) view.findViewById(R.id.selected4);
+        selected5 = (ImageView) view.findViewById(R.id.selected5);
+        selected6 = (ImageView) view.findViewById(R.id.selected6);
+        selected7 = (ImageView) view.findViewById(R.id.selected7);
+        selected8 = (ImageView) view.findViewById(R.id.selected8);
+        addToList();
+
+        imageView.setImageBitmap(randCodeImg);
+        imageView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    float x = event.getX() / LoginActivity.density;
+                    float y = event.getY() / LoginActivity.density - 33;
+                    RandCodeUtil.changeSelectedStatus(x, y, list, false);
+                }
+                return false;
+            }
+        });
+
+        builder.setTitle("选择验证码");
+        builder.setCancelable(false);
+        builder.setView(view);
+        builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (TextUtils.isEmpty(RandCodeUtil.getRandCode(list))) {
+                    showShortToast("请点击验证码进行验证");
+                }
+                else {
+                    randCode = RandCodeUtil.getRandCode(list);
+                    checkRandCodeAndNext();
+                }
+            }
+        });
+        builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+        });
+        builder.show();
+    }
+
+    private void refreshPassCode() {
+        HttpService service = RetrofitManager.getInstance().getService();
+        getPassCodeSubscription = service.getPassCode("passenger", "randp")
+                .map(new Func1<ResponseBody, Bitmap>() {
+                    @Override
+                    public Bitmap call(ResponseBody responseBody) {
+                        return BitmapFactory.decodeStream(responseBody.byteStream());
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<Bitmap>() {
+                    @Override
+                    public void call(Bitmap bitmap) {
+                        imageView.setImageBitmap(bitmap);
+                    }
+                });
+    }
+
+    private void submitOrderNext(final HttpService service, final String token) {
+        orderParam.setRandCode(randCode);
+        map.clear();
+        map.put("passengerTicketStr", orderParam.getPassengerTicketStr());
+        map.put("oldPassengerStr", orderParam.getOldPassengerStr());
+        map.put("randCode", orderParam.getRandCode());
+        map.put("purpose_codes", orderParam.getPurpose_codes());
+        map.put("key_check_isChange", orderParam.getKey_check_isChange());
+        map.put("leftTicketStr", orderParam.getLeftTicketStr());
+        map.put("train_location", orderParam.getTrain_location());
+        map.put("choose_seats", orderParam.getChoose_seats());
+        map.put("seatDetailType", orderParam.getSeatDetailType());
+        map.put("roomType", orderParam.getRoomType());
+        map.put("dwAll", orderParam.getDwAll());
+        map.put("_json_att", orderParam.get_json_att());
+        map.put("REPEAT_SUBMIT_TOKEN", orderParam.getREPEAT_SUBMIT_TOKEN());
         service.confirmSingleForQueue(map)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -707,7 +766,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void queryOrderWaitTimeLoop(final HttpService service, final String token) {
         SubscriptionUtil.unSubscribe(queryWaitTimeLoopSubscription);
-        queryWaitTimeLoopSubscription = Observable.interval(100, TimeUnit.MILLISECONDS)
+        queryWaitTimeLoopSubscription = Observable.interval(200, TimeUnit.MILLISECONDS)
                 .flatMap(new Func1<Long, Observable<QueryOrderWaitTimeResponse>>() {
                     @Override
                     public Observable<QueryOrderWaitTimeResponse> call(Long aLong) {
@@ -752,8 +811,44 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return s.split("\\.")[1].substring(0, 13);
     }
 
+    private void addToList() {
+        list = new ArrayList<>();
+        list.add(selected1);
+        list.add(selected2);
+        list.add(selected3);
+        list.add(selected4);
+        list.add(selected5);
+        list.add(selected6);
+        list.add(selected7);
+        list.add(selected8);
+    }
+
+    private void checkRandCodeAndNext() {
+        final HttpService service = RetrofitManager.getInstance().getService();
+        service.checkRandCode2(randCode, "randp", "", orderParam.getREPEAT_SUBMIT_TOKEN())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<CheckRandCodeResponse>() {
+                    @Override
+                    public void call(CheckRandCodeResponse checkRandCodeResponse) {
+                        if (checkRandCodeResponse.getData().getResult().equals("1")) {
+                            submitOrderNext(service, orderParam.getREPEAT_SUBMIT_TOKEN());
+                        }
+                        else {
+                            showShortToast("验证码错误");
+                            RandCodeUtil.clearSelected(list);
+                            refreshPassCode();
+                        }
+                    }
+                });
+    }
+
     private void showShortToast(String s) {
         ToastUtil.showShortToast(MainActivity.this, s);
+    }
+
+    private void showLongToast(String s) {
+        ToastUtil.showLongToast(MainActivity.this, s);
     }
 
     @Override
@@ -768,6 +863,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         SubscriptionUtil.unSubscribe(querySubscription);
         SubscriptionUtil.unSubscribe(orderSubscription);
         SubscriptionUtil.unSubscribe(orderCompleteSubscription);
+        SubscriptionUtil.unSubscribe(getPassCodeSubscription);
         SubscriptionUtil.unSubscribe(busSubscription);
     }
 

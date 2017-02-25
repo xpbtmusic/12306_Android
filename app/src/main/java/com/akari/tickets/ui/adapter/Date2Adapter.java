@@ -21,7 +21,7 @@ import java.util.List;
 public class Date2Adapter extends BaseAdapter {
 
     private Context context;
-    public static String[] date2 = new String[4];
+    public static List<String> list;
     public static List<Boolean> checkStatus;
 
     public Date2Adapter(Context context, int year, int month, int day) {
@@ -30,30 +30,31 @@ public class Date2Adapter extends BaseAdapter {
     }
 
     private void initData(int year, int month, int day) {
+        list = new ArrayList<>();
         Calendar calendar = Calendar.getInstance();
         calendar.set(year, month - 1, day - 2);
-        date2[0] = DateUtil.getDateStr(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+        list.add(DateUtil.getDateStr(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)));
         calendar.set(year, month - 1, day - 1);
-        date2[1] = DateUtil.getDateStr(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+        list.add(DateUtil.getDateStr(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)));
         calendar.set(year, month - 1, day + 1);
-        date2[2] = DateUtil.getDateStr(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+        list.add(DateUtil.getDateStr(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)));
         calendar.set(year, month - 1, day + 2);
-        date2[3] = DateUtil.getDateStr(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+        list.add(DateUtil.getDateStr(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)));
 
         checkStatus = new ArrayList<>();
-        for (int i = 0; i < date2.length; i++) {
+        for (int i = 0; i < list.size(); i++) {
             checkStatus.add(false);
         }
     }
 
     @Override
     public int getCount() {
-        return date2.length;
+        return list.size();
     }
 
     @Override
     public Object getItem(int position) {
-        return date2[position];
+        return list.get(position);
     }
 
     @Override
@@ -76,7 +77,7 @@ public class Date2Adapter extends BaseAdapter {
 
     private void getCheckStatus(View view, final int position) {
         CheckBox checkBox = (CheckBox) view.findViewById(R.id.checkbox);
-        checkBox.setText(date2[position]);
+        checkBox.setText(list.get(position));
         checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {

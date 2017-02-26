@@ -8,6 +8,7 @@ import android.widget.DatePicker;
 import android.widget.TextView;
 
 import com.akari.tickets.R;
+import com.akari.tickets.rxbus.RxBus;
 import com.akari.tickets.utils.DateUtil;
 
 public class DatePickerFragment extends DialogFragment implements DatePickerDialog.OnDateSetListener {
@@ -36,6 +37,7 @@ public class DatePickerFragment extends DialogFragment implements DatePickerDial
         String dateStr = DateUtil.getDateStr(year, month, day);
         chooseDate.setText(dateStr);
         chooseDate2.setText("");
+        RxBus.getDefault().post("getTrains");
     }
 
 }

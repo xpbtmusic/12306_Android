@@ -16,12 +16,14 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.akari.tickets.R;
 import com.akari.tickets.beans.CheckRandCodeResponse;
 import com.akari.tickets.beans.QueryOrderWaitTimeResponse;
 import com.akari.tickets.beans.ResultOrderResponse;
+import com.akari.tickets.rxbus.RxBus;
 import com.akari.tickets.ui.adapter.Date2Adapter;
 import com.akari.tickets.ui.adapter.PassengersAdapter;
 import com.akari.tickets.ui.adapter.SeatsAdapter;
@@ -65,6 +67,7 @@ import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+    private ProgressBar progressBar;
     private TextView fromStation;
     private TextView toStation;
     private TextView choosePassengers;
@@ -92,6 +95,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Subscription getPassCodeSubscription;
     private Subscription queryWaitTimeLoopSubscription;
     private Subscription orderCompleteSubscription;
+    private Subscription progressbarBus;
     private String leftTicketUrl = "leftTicket/queryA";
     private static OrderParam orderParam;
     private static Map<String, String> map;
@@ -117,6 +121,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        progressBar = (ProgressBar) findViewById(R.id.progress_bar);
         fromStation = (TextView) findViewById(R.id.from_station);
         toStation = (TextView) findViewById(R.id.to_station);
         choosePassengers = (TextView) findViewById(R.id.choose_passengers);
@@ -132,6 +137,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         yzNum = (TextView) findViewById(R.id.yz_num);
         wzNum = (TextView) findViewById(R.id.wz_num);
         queryCount = (TextView) findViewById(R.id.query_count);
+
+        registerBus();
         loadDefaultData();
 
         fromStation.setOnClickListener(this);
@@ -143,6 +150,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         chooseDate2.setOnClickListener(this);
         button.setOnClickListener(this);
         refresh.setOnClickListener(this);
+    }
+
+    private void registerBus() {
+        SubscriptionUtil.unSubscribe(progressbarBus);
+        progressbarBus = RxBus.getDefault().toObservable()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<Object>() {
+                    @Override
+                    public void call(Object o) {
+                        if (o.toString().equals("start")) {
+                            progressBar.setVisibility(View.VISIBLE);
+                        }
+                        else if (o.toString().equals("stop")) {
+                            progressBar.setVisibility(View.INVISIBLE);
+                        }
+                        else if (o.toString().equals("getTrains")) {
+                            getTrains();
+                        }
+                    }
+                });
     }
 
     private void loadDefaultData() {
@@ -191,6 +219,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void getTrains() {
+        progressBar.setVisibility(View.VISIBLE);
         HttpService service = RetrofitManager.getInstance().getService();
         SubscriptionUtil.unSubscribe(querySubscription);
         QueryParam queryParam = getQueryParam();
@@ -200,6 +229,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .subscribe(new Action1<QueryTrainsResponse>() {
                     @Override
                     public void call(QueryTrainsResponse queryTrainsResponse) {
+                        RxBus.getDefault().post("stop");
                         trains.clear();
                         List<QueryTrainsResponse.Data> datas = queryTrainsResponse.getData();
                         for (QueryTrainsResponse.Data data : datas) {
@@ -243,6 +273,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 else {
                     SubscriptionUtil.unSubscribe(queryTrainLoopSubscription);
+                    progressBar.setVisibility(View.INVISIBLE);
                     button.setText("开始查询");
                 }
                 break;
@@ -386,6 +417,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void startQueryLoop() {
+        progressBar.setVisibility(View.VISIBLE);
         SubscriptionUtil.unSubscribe(queryTrainLoopSubscription);
         SubscriptionUtil.unSubscribe(querySubscription);
         final HttpService service = RetrofitManager.getInstance().getService();
@@ -406,6 +438,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .flatMap(new Func1<Long, Observable<QueryTrainsResponse>>() {
                     @Override
                     public Observable<QueryTrainsResponse> call(Long aLong) {
+                        RxBus.getDefault().post("start");
                         String trainDate = queryParam.getTrain_date();
                         if (!queryParam.getDate2()[0].equals("")) {
                             long i = aLong % (queryParam.getDate2().length + 1);
@@ -457,6 +490,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     button.setText("开始查询");
                     OrderUtil.seat_type_codes = "4";
                     breakChooseSeats = true;
+                    progressBar.setVisibility(View.INVISIBLE);
                     submitOrder(secretStr, queryParam);
                 }
                 break;
@@ -466,6 +500,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     button.setText("开始查询");
                     OrderUtil.seat_type_codes = "3";
                     breakChooseSeats = true;
+                    progressBar.setVisibility(View.INVISIBLE);
                     submitOrder(secretStr, queryParam);
                 }
                 break;
@@ -475,6 +510,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     button.setText("开始查询");
                     OrderUtil.seat_type_codes = "1";
                     breakChooseSeats = true;
+                    progressBar.setVisibility(View.INVISIBLE);
                     submitOrder(secretStr, queryParam);
                 }
                 break;
@@ -484,6 +520,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     button.setText("开始查询");
                     OrderUtil.seat_type_codes = "1";
                     breakChooseSeats = true;
+                    progressBar.setVisibility(View.INVISIBLE);
                     submitOrder(secretStr, queryParam);
                 }
                 break;
@@ -776,11 +813,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         SubscriptionUtil.unSubscribe(orderSubscription);
         SubscriptionUtil.unSubscribe(orderCompleteSubscription);
         SubscriptionUtil.unSubscribe(getPassCodeSubscription);
+        SubscriptionUtil.unSubscribe(progressbarBus);
     }
 
     @Override
     protected void onRestart() {
         super.onRestart();
+        registerBus();
     }
 
     @Override

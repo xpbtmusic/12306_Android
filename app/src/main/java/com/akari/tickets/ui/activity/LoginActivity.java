@@ -14,12 +14,14 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 
 import com.akari.tickets.R;
 import com.akari.tickets.beans.CheckRandCodeResponse;
 import com.akari.tickets.beans.LoginSuggestResponse;
 import com.akari.tickets.network.RetrofitManager;
 import com.akari.tickets.network.HttpService;
+import com.akari.tickets.rxbus.RxBus;
 import com.akari.tickets.utils.PassengerUtil;
 import com.akari.tickets.utils.RandCodeUtil;
 import com.akari.tickets.utils.StationCodeUtil;
@@ -39,6 +41,7 @@ import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 public class LoginActivity extends AppCompatActivity implements View.OnTouchListener, View.OnClickListener {
+    private ProgressBar progressBar;
     private EditText etUsername;
     private EditText etPassword;
     private ImageView captcha;
@@ -59,11 +62,13 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
 
     public static float density;
     private Subscription subscription;
+    private Subscription progressbarBus;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+        progressBar = (ProgressBar) findViewById(R.id.progressbar);
         etUsername = (EditText) findViewById(R.id.username);
         etPassword = (EditText) findViewById(R.id.password);
         captcha = (ImageView) findViewById(R.id.captcha);
@@ -77,17 +82,32 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
         selected6 = (ImageView) findViewById(R.id.selected6);
         selected7 = (ImageView) findViewById(R.id.selected7);
         selected8 = (ImageView) findViewById(R.id.selected8);
-        addToList();
 
+        addToList();
         captcha.setOnTouchListener(this);
         btnLogin.setOnClickListener(this);
-
+        registerBus();
         loadData();
         loginInit();
 
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
         density = metrics.density;
+    }
+
+    private void registerBus() {
+        SubscriptionUtil.unSubscribe(progressbarBus);
+        progressbarBus = RxBus.getDefault().toObservable()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<Object>() {
+                    @Override
+                    public void call(Object o) {
+                        if (o.toString().equals("stop")) {
+                            progressBar.setVisibility(View.INVISIBLE);
+                        }
+                    }
+                });
     }
 
     private void loadData() {
@@ -133,6 +153,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
     public void onClick(View v) {
         if (v.getId() == R.id.btn_login) {
             if (preCheckThrough()) {
+                progressBar.setVisibility(View.VISIBLE);
                 login();
             }
         }
@@ -209,6 +230,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
                         }
                         else {
                             showToastAndClearSelected("验证码错误");
+                            RxBus.getDefault().post("stop");
                             getPassCode();
                         }
                         return null;
@@ -220,6 +242,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
                         String loginCheck = loginSuggestResponse.getData().getLoginCheck();
                         if (loginCheck == null) {
                             showToastAndClearSelected(loginSuggestResponse.getMessages()[0]);
+                            RxBus.getDefault().post("stop");
                             getPassCode();
                         }
                         else if (loginCheck.equals("Y")){
@@ -231,7 +254,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
                 .flatMap(new Func1<ResponseBody, Observable<ResponseBody>>() {
                     @Override
                     public Observable<ResponseBody> call(ResponseBody responseBody) {
-                        showToastAndClearSelected("登录成功");
                         saveData();
                         new Thread(new Runnable() {
                             @Override
@@ -247,6 +269,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
                 .subscribe(new Action1<ResponseBody>() {
                     @Override
                     public void call(ResponseBody responseBody) {
+                        showToastAndClearSelected("登录成功");
+                        RxBus.getDefault().post("stop");
                         try {
                             String json = responseBody.string().split("passengers=")[1].split(";")[0];
                             PassengerUtil.savePassengers(json);
@@ -293,6 +317,13 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
     protected void onStop() {
         super.onStop();
         SubscriptionUtil.unSubscribe(subscription);
+        SubscriptionUtil.unSubscribe(progressbarBus);
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        registerBus();
     }
 
     @Override

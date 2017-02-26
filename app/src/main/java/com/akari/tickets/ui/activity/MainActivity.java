@@ -23,6 +23,7 @@ import com.akari.tickets.R;
 import com.akari.tickets.beans.CheckRandCodeResponse;
 import com.akari.tickets.beans.QueryOrderWaitTimeResponse;
 import com.akari.tickets.beans.ResultOrderResponse;
+import com.akari.tickets.beans.SubmitOrderResponse;
 import com.akari.tickets.rxbus.RxBus;
 import com.akari.tickets.ui.adapter.Date2Adapter;
 import com.akari.tickets.ui.adapter.PassengersAdapter;
@@ -97,6 +98,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Subscription orderCompleteSubscription;
     private Subscription progressbarBus;
     private String leftTicketUrl = "leftTicket/queryA";
+    private static QueryParam queryParam;
     private static OrderParam orderParam;
     private static Map<String, String> map;
     private static boolean breakChooseSeats = false;
@@ -168,6 +170,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }
                         else if (o.toString().equals("getTrains")) {
                             getTrains();
+                        }
+                        else {
+                            showLongToast(o.toString());
                         }
                     }
                 });
@@ -417,11 +422,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void startQueryLoop() {
+        breakChooseSeats = false;
         progressBar.setVisibility(View.VISIBLE);
         SubscriptionUtil.unSubscribe(queryTrainLoopSubscription);
         SubscriptionUtil.unSubscribe(querySubscription);
         final HttpService service = RetrofitManager.getInstance().getService();
-        final QueryParam queryParam = getQueryParam();
+        queryParam = getQueryParam();
         String[] trainDates;
         if (!queryParam.getDate2()[0].equals("")) {
             trainDates = new String[queryParam.getDate2().length + 1];
@@ -542,10 +548,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         final HttpService service = RetrofitManager.getInstance().getService();
         orderSubscription = service.submitOrder(map)
-                .flatMap(new Func1<ResponseBody, Observable<ResponseBody>>() {
+                .flatMap(new Func1<SubmitOrderResponse, Observable<ResponseBody>>() {
                     @Override
-                    public Observable<ResponseBody> call(ResponseBody responseBody) {
-                        return service.initDc("");
+                    public Observable<ResponseBody> call(SubmitOrderResponse submitOrderResponse) {
+                        if (!submitOrderResponse.isStatus()) {
+                            RxBus.getDefault().post(submitOrderResponse.getMessages()[0]);
+                        }
+                        else {
+                            return service.initDc("");
+                        }
+                        return null;
                     }
                 })
                 .flatMap(new Func1<ResponseBody, Observable<ResponseBody>>() {

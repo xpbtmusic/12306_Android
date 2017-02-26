@@ -17,8 +17,6 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp"
         android:paddingLeft="16dp"
         android:paddingRight="16dp">
         <TextView
@@ -26,6 +24,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:background="?android:attr/selectableItemBackground"
             android:padding="16dp"
             android:textSize="24sp"
             android:text="北京"
@@ -41,6 +40,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:background="?android:attr/selectableItemBackground"
             android:padding="16dp"
             android:textSize="24sp"
             android:text="万州"
@@ -53,7 +53,7 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content" >
         <TextView
             android:layout_width="96dp"
             android:layout_height="wrap_content"
@@ -67,6 +67,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:background="?android:attr/selectableItemBackground"
             android:padding="16dp"
             android:layout_marginLeft="32dp"
             android:lineSpacingExtra="8dp"
@@ -95,6 +96,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:padding="16dp"
+            android:background="?android:attr/selectableItemBackground"
             android:layout_marginLeft="32dp"
             android:lineSpacingExtra="8dp"
             android:textSize="14sp"
@@ -103,8 +105,10 @@
         <ImageView
             android:id="@+id/refresh"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="16dp"
+            android:layout_height="match_parent"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
+            android:background="?android:attr/selectableItemBackground"
             android:layout_gravity="center"
             android:src="@mipmap/ic_refresh_black_24dp"/>
     </LinearLayout>
@@ -129,6 +133,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:padding="16dp"
+            android:background="?android:attr/selectableItemBackground"
             android:layout_marginLeft="32dp"
             android:lineSpacingExtra="8dp"
             android:textSize="14sp"
@@ -156,6 +161,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:padding="16dp"
+            android:background="?android:attr/selectableItemBackground"
             android:layout_marginLeft="32dp"
             android:textSize="14sp"
             android:textColor="?android:attr/textColorPrimary"/>
@@ -181,6 +187,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:padding="16dp"
+            android:background="?android:attr/selectableItemBackground"
             android:layout_marginLeft="32dp"
             android:textSize="14sp"
             android:hint="选择备选日期"

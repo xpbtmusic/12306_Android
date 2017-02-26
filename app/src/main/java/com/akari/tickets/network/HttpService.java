@@ -7,6 +7,7 @@ import com.akari.tickets.beans.LoginSuggestResponse;
 import com.akari.tickets.beans.QueryOrderWaitTimeResponse;
 import com.akari.tickets.beans.QueryTrainsResponse;
 import com.akari.tickets.beans.ResultOrderResponse;
+import com.akari.tickets.beans.SubmitOrderResponse;
 
 import java.util.Map;
 import java.util.Random;
@@ -65,7 +66,7 @@ public interface HttpService {
 
     @FormUrlEncoded
     @POST("leftTicket/submitOrderRequest")
-    Observable<ResponseBody> submitOrder(@FieldMap(encoded = true) Map<String, String> fields);
+    Observable<SubmitOrderResponse> submitOrder(@FieldMap(encoded = true) Map<String, String> fields);
 
     @FormUrlEncoded
     @POST("confirmPassenger/initDc")

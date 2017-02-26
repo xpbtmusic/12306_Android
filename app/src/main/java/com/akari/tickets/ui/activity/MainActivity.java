@@ -87,7 +87,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView queryCount;
 
     private Subscription querySubscription;
-    private Subscription busSubscription;
     private Subscription queryTrainLoopSubscription;
     private Subscription orderSubscription;
     private Subscription getPassCodeSubscription;
@@ -144,8 +143,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         chooseDate2.setOnClickListener(this);
         button.setOnClickListener(this);
         refresh.setOnClickListener(this);
-
-//        registerBus();
     }
 
     private void loadDefaultData() {
@@ -211,19 +208,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 });
     }
-
-//    private void registerBus() {
-//        SubscriptionUtil.unSubscribe(busSubscription);
-//        busSubscription = RxBus.getDefault().toObservable()
-//                .subscribeOn(Schedulers.io())
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .subscribe(new Action1<Object>() {
-//                    @Override
-//                    public void call(Object o) {
-//                        showShortToast(o.toString());
-//                    }
-//                });
-//    }
 
     @Override
     public void onClick(View v) {
@@ -334,101 +318,47 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void buildChoosePassengersDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-        View view = View.inflate(MainActivity.this, R.layout.choose_passengers, null);
-        ListView listView = (ListView) view.findViewById(R.id.list_view);
-
         List<Passenger> passengers = PassengerUtil.getPassengers();
         final List<String> list = new ArrayList<>();
         for (Passenger p : passengers) {
             list.add(p.getPassenger_name());
         }
-        listView.setAdapter(new PassengersAdapter(MainActivity.this, list));
 
+        View view = View.inflate(MainActivity.this, R.layout.choose_passengers, null);
+        ListView listView = (ListView) view.findViewById(R.id.list_view);
+        PassengersAdapter adapter = new PassengersAdapter(MainActivity.this, list);
+        listView.setAdapter(adapter);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         builder.setTitle("选择乘车人");
         builder.setView(view);
-        AlertDialogUtil.setButton(builder, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                StringBuilder builder = new StringBuilder();
-                boolean first = true;
-                for (int i = 0; i < list.size(); i ++) {
-                    if (PassengersAdapter.checkStatus.get(i)) {
-                        if (first) {
-                            builder.append(list.get(i));
-                            first = false;
-                        }
-                        else {
-                            builder.append(", ");
-                            builder.append(list.get(i));
-                        }
-                    }
-                }
-                choosePassengers.setText(builder.toString());
-            }
-        });
+        AlertDialogUtil.setButton(builder, adapter, choosePassengers);
         builder.show();
     }
 
     private void buildChooseTrainsDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         View view = View.inflate(MainActivity.this, R.layout.choose_trains, null);
         ListView listView = (ListView) view.findViewById(R.id.list_view);
-        listView.setAdapter(new TrainsAdapter(MainActivity.this, trains));
+        TrainsAdapter adapter = new TrainsAdapter(MainActivity.this, trains);
+        listView.setAdapter(adapter);
 
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         builder.setTitle("选择车次");
         builder.setView(view);
-        AlertDialogUtil.setButton(builder, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                StringBuilder builder = new StringBuilder();
-                boolean first = true;
-                for (int i = 0; i < trains.size(); i ++) {
-                    if (TrainsAdapter.checkStatus.get(i)) {
-                        if (first) {
-                            builder.append(trains.get(i));
-                            first = false;
-                        }
-                        else {
-                            builder.append(", ");
-                            builder.append(trains.get(i));
-                        }
-                    }
-                }
-                chooseTrains.setText(builder.toString());
-            }
-        });
+        AlertDialogUtil.setButton(builder, adapter, chooseTrains);
         builder.show();
     }
 
     private void buildChooseSeatsDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         View view = View.inflate(MainActivity.this, R.layout.choose_seats, null);
         ListView listView = (ListView) view.findViewById(R.id.list_view);
-        listView.setAdapter(new SeatsAdapter(MainActivity.this));
+        SeatsAdapter adapter = new SeatsAdapter(MainActivity.this);
+        listView.setAdapter(adapter);
 
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         builder.setTitle("选择席别");
         builder.setView(view);
-        AlertDialogUtil.setButton(builder, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                StringBuilder builder = new StringBuilder();
-                boolean first = true;
-                for (int i = 0; i < SeatsAdapter.list.size(); i ++) {
-                    if (SeatsAdapter.checkStatus.get(i)) {
-                        if (first) {
-                            builder.append(SeatsAdapter.list.get(i));
-                            first = false;
-                        }
-                        else {
-                            builder.append(", ");
-                            builder.append(SeatsAdapter.list.get(i));
-                        }
-                    }
-                }
-                chooseSeats.setText(builder.toString());
-            }
-        });
+        AlertDialogUtil.setButton(builder, adapter, chooseSeats);
         builder.show();
     }
 
@@ -443,33 +373,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int month = Integer.parseInt(date.split("-")[1]);
         int day = Integer.parseInt(date.split("-")[2]);
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         View view = View.inflate(MainActivity.this, R.layout.choose_date2, null);
         ListView listView = (ListView) view.findViewById(R.id.list_view);
-        listView.setAdapter(new Date2Adapter(MainActivity.this, year, month, day));
+        Date2Adapter adapter = new Date2Adapter(MainActivity.this, year, month, day);
+        listView.setAdapter(adapter);
 
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         builder.setTitle("备选日期");
         builder.setView(view);
-        AlertDialogUtil.setButton(builder, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                StringBuilder builder = new StringBuilder();
-                boolean first = true;
-                for (int i = 0; i < Date2Adapter.list.size(); i ++) {
-                    if (Date2Adapter.checkStatus.get(i)) {
-                        if (first) {
-                            builder.append(Date2Adapter.list.get(i));
-                            first = false;
-                        }
-                        else {
-                            builder.append(", ");
-                            builder.append(Date2Adapter.list.get(i));
-                        }
-                    }
-                }
-                chooseDate2.setText(builder.toString());
-            }
-        });
+        AlertDialogUtil.setButton(builder, adapter, chooseDate2);
         builder.show();
     }
 
@@ -864,13 +776,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         SubscriptionUtil.unSubscribe(orderSubscription);
         SubscriptionUtil.unSubscribe(orderCompleteSubscription);
         SubscriptionUtil.unSubscribe(getPassCodeSubscription);
-        SubscriptionUtil.unSubscribe(busSubscription);
     }
 
     @Override
     protected void onRestart() {
         super.onRestart();
-//        registerBus();
     }
 
     @Override

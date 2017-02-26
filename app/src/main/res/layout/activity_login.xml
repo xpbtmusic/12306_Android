@@ -30,8 +30,17 @@
         android:layout_width="293dp"
         android:layout_height="190dp"
         android:layout_below="@id/password"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="16dp"
         android:layout_centerHorizontal="true"/>
+    <CheckBox
+        android:id="@+id/checkbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/captcha"
+        android:layout_alignParentRight="true"
+        android:padding="16dp"
+        android:textSize="14sp"
+        android:text="记住密码"/>
     <Button
         android:id="@+id/btn_login"
         android:layout_width="match_parent"

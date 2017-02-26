@@ -18,8 +18,7 @@ import java.util.List;
  * Created by Akari on 2016/12/31.
  */
 
-public class Date2Adapter extends BaseAdapter {
-
+public class Date2Adapter extends BaseAdapter implements com.akari.tickets.ui.adapter.BaseAdapter {
     private Context context;
     public static List<String> list;
     public static List<Boolean> checkStatus;
@@ -90,5 +89,15 @@ public class Date2Adapter extends BaseAdapter {
             }
         });
         checkBox.setChecked(checkStatus.get(position));
+    }
+
+    @Override
+    public List<String> getList() {
+        return list;
+    }
+
+    @Override
+    public List<Boolean> getCheckStatusList() {
+        return checkStatus;
     }
 }

@@ -16,8 +16,7 @@ import java.util.List;
  * Created by Akari on 2016/12/30.
  */
 
-public class PassengersAdapter extends BaseAdapter {
-
+public class PassengersAdapter extends BaseAdapter implements com.akari.tickets.ui.adapter.BaseAdapter {
     private Context context;
     private List<String> list;
     public static List<Boolean> checkStatus;
@@ -78,5 +77,15 @@ public class PassengersAdapter extends BaseAdapter {
             }
         });
         checkBox.setChecked(checkStatus.get(position));
+    }
+
+    @Override
+    public List<String> getList() {
+        return list;
+    }
+
+    @Override
+    public List<Boolean> getCheckStatusList() {
+        return checkStatus;
     }
 }

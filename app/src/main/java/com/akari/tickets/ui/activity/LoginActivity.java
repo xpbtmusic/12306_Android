@@ -1,6 +1,7 @@
 package com.akari.tickets.ui.activity;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.support.v7.app.AppCompatActivity;
@@ -10,6 +11,7 @@ import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
 
@@ -40,6 +42,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
     private EditText etUsername;
     private EditText etPassword;
     private ImageView captcha;
+    private CheckBox checkBox;
     private Button btnLogin;
     private ImageView selected1;
     private ImageView selected2;
@@ -64,6 +67,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
         etUsername = (EditText) findViewById(R.id.username);
         etPassword = (EditText) findViewById(R.id.password);
         captcha = (ImageView) findViewById(R.id.captcha);
+        checkBox = (CheckBox) findViewById(R.id.checkbox);
         btnLogin = (Button) findViewById(R.id.btn_login);
         selected1 = (ImageView) findViewById(R.id.selected1);
         selected2 = (ImageView) findViewById(R.id.selected2);
@@ -78,11 +82,23 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
         captcha.setOnTouchListener(this);
         btnLogin.setOnClickListener(this);
 
+        loadData();
         loginInit();
 
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
         density = metrics.density;
+    }
+
+    private void loadData() {
+        SharedPreferences pref = getSharedPreferences("data", MODE_PRIVATE);
+        etUsername.setText(pref.getString("username", ""));
+        if (pref.contains("remembered")) {
+            if (pref.getBoolean("remembered", false)) {
+                etPassword.setText(pref.getString("password", ""));
+                checkBox.setChecked(true);
+            }
+        }
     }
 
     @Override
@@ -139,6 +155,19 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
         }
         randCode = RandCodeUtil.getRandCode(list);
         return true;
+    }
+
+    private void saveData() {
+        SharedPreferences.Editor editor = getSharedPreferences("data", MODE_PRIVATE).edit();
+        editor.putString("username", username);
+        if (checkBox.isChecked()) {
+            editor.putBoolean("remembered", true);
+            editor.putString("password", password);
+        }
+        else {
+            editor.putBoolean("remembered", false);
+        }
+        editor.apply();
     }
 
     private void loginInit() {
@@ -203,6 +232,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
                     @Override
                     public Observable<ResponseBody> call(ResponseBody responseBody) {
                         showToastAndClearSelected("登录成功");
+                        saveData();
                         new Thread(new Runnable() {
                             @Override
                             public void run() {

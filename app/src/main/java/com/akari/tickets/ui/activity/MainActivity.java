@@ -21,10 +21,12 @@ import android.widget.TextView;
 
 import com.akari.tickets.R;
 import com.akari.tickets.beans.CheckRandCodeResponse;
+import com.akari.tickets.beans.LoopResponse;
 import com.akari.tickets.beans.QueryOrderWaitTimeResponse;
 import com.akari.tickets.beans.ResultOrderResponse;
 import com.akari.tickets.beans.SubmitOrderResponse;
 import com.akari.tickets.rxbus.RxBus;
+import com.akari.tickets.service.LoopService;
 import com.akari.tickets.ui.adapter.Date2Adapter;
 import com.akari.tickets.ui.adapter.PassengersAdapter;
 import com.akari.tickets.ui.adapter.SeatsAdapter;
@@ -91,21 +93,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView queryCount;
 
     private Subscription querySubscription;
-    private Subscription queryTrainLoopSubscription;
-    private Subscription orderSubscription;
-    private Subscription getPassCodeSubscription;
-    private Subscription queryWaitTimeLoopSubscription;
-    private Subscription orderCompleteSubscription;
     private Subscription progressbarBus;
     private String leftTicketUrl = "leftTicket/queryA";
-    private static QueryParam queryParam;
-    private static OrderParam orderParam;
-    private static Map<String, String> map;
-    private static boolean breakChooseSeats = false;
     private static int count = 0;
     private static Bitmap randCodeImg;
     private static String randCode = "";
-    private static boolean showPassCode = false;
+    private static boolean refreshPassCode = false;
 
     private ImageView imageView;
     private ImageView selected1;
@@ -117,6 +110,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ImageView selected7;
     private ImageView selected8;
     private List<ImageView> list;
+
+    private AlertDialog alertDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -152,30 +147,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         chooseDate2.setOnClickListener(this);
         button.setOnClickListener(this);
         refresh.setOnClickListener(this);
-    }
-
-    private void registerBus() {
-        SubscriptionUtil.unSubscribe(progressbarBus);
-        progressbarBus = RxBus.getDefault().toObservable()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Action1<Object>() {
-                    @Override
-                    public void call(Object o) {
-                        if (o.toString().equals("start")) {
-                            progressBar.setVisibility(View.VISIBLE);
-                        }
-                        else if (o.toString().equals("stop")) {
-                            progressBar.setVisibility(View.INVISIBLE);
-                        }
-                        else if (o.toString().equals("getTrains")) {
-                            getTrains();
-                        }
-                        else {
-                            showLongToast(o.toString());
-                        }
-                    }
-                });
     }
 
     private void loadDefaultData() {
@@ -273,12 +244,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     count = 0;
                     if (preCheckThrough()) {
                         button.setText("停止查询");
-                        startQueryLoop();
+                        Intent intent = new Intent(MainActivity.this, LoopService.class);
+                        intent.putExtra("leftTicketUrl", leftTicketUrl);
+                        intent.putExtra("queryParam", getQueryParam());
+                        startService(intent);
                     }
                 }
                 else {
-                    SubscriptionUtil.unSubscribe(queryTrainLoopSubscription);
                     progressBar.setVisibility(View.INVISIBLE);
+                    stopService(new Intent(MainActivity.this, LoopService.class));
                     button.setText("开始查询");
                 }
                 break;
@@ -421,211 +395,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         builder.show();
     }
 
-    private void startQueryLoop() {
-        breakChooseSeats = false;
-        progressBar.setVisibility(View.VISIBLE);
-        SubscriptionUtil.unSubscribe(queryTrainLoopSubscription);
-        SubscriptionUtil.unSubscribe(querySubscription);
-        final HttpService service = RetrofitManager.getInstance().getService();
-        queryParam = getQueryParam();
-        String[] trainDates;
-        if (!queryParam.getDate2()[0].equals("")) {
-            trainDates = new String[queryParam.getDate2().length + 1];
-            trainDates[0] = queryParam.getTrain_date();
-            for (int i = 1; i < trainDates.length; i++) {
-                trainDates[i] = queryParam.getDate2()[i - 1];
-            }
-        }
-        else {
-            trainDates = new String[1];
-            trainDates[0] = queryParam.getTrain_date();
-        }
-        queryTrainLoopSubscription = Observable.interval(1500, TimeUnit.MILLISECONDS)
-                .flatMap(new Func1<Long, Observable<QueryTrainsResponse>>() {
-                    @Override
-                    public Observable<QueryTrainsResponse> call(Long aLong) {
-                        RxBus.getDefault().post("start");
-                        String trainDate = queryParam.getTrain_date();
-                        if (!queryParam.getDate2()[0].equals("")) {
-                            long i = aLong % (queryParam.getDate2().length + 1);
-                            if (i == queryParam.getDate2().length) {
-                                trainDate = queryParam.getTrain_date();
-                            }
-                            else {
-                                trainDate = queryParam.getDate2()[(int)i];
-                            }
-                        }
-                        return service.queryTrains(leftTicketUrl, trainDate, queryParam.getFrom_station_code(), queryParam.getTo_station_code(), queryParam.getPurpose_codes());
-                    }
-                })
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Action1<QueryTrainsResponse>() {
-                    @Override
-                    public void call(QueryTrainsResponse queryTrainsResponse) {
-                        queryCount.setText("第" + ++count + "次查询");
-                        for (QueryTrainsResponse.Data data : queryTrainsResponse.getData()) {
-                            if (data.getQueryLeftNewDTO().getStation_train_code().equals(chooseTrains.getText().toString())) {
-                                trainCode.setText(chooseTrains.getText().toString());
-                                rwNum.setText(data.getQueryLeftNewDTO().getRw_num());
-                                ywNum.setText(data.getQueryLeftNewDTO().getYw_num());
-                                yzNum.setText(data.getQueryLeftNewDTO().getYz_num());
-                                wzNum.setText(data.getQueryLeftNewDTO().getWz_num());
-                            }
-                            if (!data.getSecretStr().equals("")) {
-                                if (data.getQueryLeftNewDTO().getStation_train_code().equals(queryParam.getTrain_code())) {
-                                    String[] seats = queryParam.getSeats();
-                                    for (String seat : seats) {
-                                        querySeats(seat, data.getQueryLeftNewDTO(), data.getSecretStr(), queryParam);
-                                        if (breakChooseSeats) {
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-    }
-
-    private void querySeats(String seat, QueryLeftNewDTO queryLeftNewDTO, String secretStr, QueryParam queryParam) {
-        switch (seat) {
-            case "软卧":
-                if (!queryLeftNewDTO.getRw_num().equals("无") && !queryLeftNewDTO.getRw_num().equals("--")) {
-                    SubscriptionUtil.unSubscribe(queryTrainLoopSubscription);
-                    button.setText("开始查询");
-                    OrderUtil.seat_type_codes = "4";
-                    breakChooseSeats = true;
-                    progressBar.setVisibility(View.INVISIBLE);
-                    submitOrder(secretStr, queryParam);
-                }
-                break;
-            case "硬卧":
-                if (!queryLeftNewDTO.getYw_num().equals("无") && !queryLeftNewDTO.getYw_num().equals("--")) {
-                    SubscriptionUtil.unSubscribe(queryTrainLoopSubscription);
-                    button.setText("开始查询");
-                    OrderUtil.seat_type_codes = "3";
-                    breakChooseSeats = true;
-                    progressBar.setVisibility(View.INVISIBLE);
-                    submitOrder(secretStr, queryParam);
-                }
-                break;
-            case "硬座":
-                if (!queryLeftNewDTO.getYz_num().equals("无") && !queryLeftNewDTO.getYz_num().equals("--")) {
-                    SubscriptionUtil.unSubscribe(queryTrainLoopSubscription);
-                    button.setText("开始查询");
-                    OrderUtil.seat_type_codes = "1";
-                    breakChooseSeats = true;
-                    progressBar.setVisibility(View.INVISIBLE);
-                    submitOrder(secretStr, queryParam);
-                }
-                break;
-            case "无座":
-                if (!queryLeftNewDTO.getWz_num().equals("无") && !queryLeftNewDTO.getWz_num().equals("--")) {
-                    SubscriptionUtil.unSubscribe(queryTrainLoopSubscription);
-                    button.setText("开始查询");
-                    OrderUtil.seat_type_codes = "1";
-                    breakChooseSeats = true;
-                    progressBar.setVisibility(View.INVISIBLE);
-                    submitOrder(secretStr, queryParam);
-                }
-                break;
-            default:
-                break;
-        }
-    }
-
-    private void submitOrder(String secretStr, QueryParam queryParam) {
-        map = new HashMap<>();
-        map.put("secretStr", secretStr);
-        map.put("train_date", queryParam.getTrain_date());
-        map.put("back_train_date", queryParam.getBack_train_date());
-        map.put("tour_flag", "dc");
-        map.put("purpose_codes", queryParam.getPurpose_codes());
-        map.put("query_from_station_name", queryParam.getFrom_station());
-        map.put("query_to_station_name", queryParam.getTo_station());
-        map.put("undefined", "");
-
-        final HttpService service = RetrofitManager.getInstance().getService();
-        orderSubscription = service.submitOrder(map)
-                .flatMap(new Func1<SubmitOrderResponse, Observable<ResponseBody>>() {
-                    @Override
-                    public Observable<ResponseBody> call(SubmitOrderResponse submitOrderResponse) {
-                        if (!submitOrderResponse.isStatus()) {
-                            RxBus.getDefault().post(submitOrderResponse.getMessages()[0]);
-                        }
-                        else {
-                            return service.initDc("");
-                        }
-                        return null;
-                    }
-                })
-                .flatMap(new Func1<ResponseBody, Observable<ResponseBody>>() {
-                    @Override
-                    public Observable<ResponseBody> call(ResponseBody responseBody) {
-                        try {
-                            String response = responseBody.string();
-                            String globalRepeatSubmitToken = response.split("globalRepeatSubmitToken = '")[1].split("';")[0];
-                            orderParam = new OrderParam();
-                            orderParam.setREPEAT_SUBMIT_TOKEN(globalRepeatSubmitToken);
-
-                            JSONObject object = new JSONObject(response.split("ticketInfoForPassengerForm=")[1].split(";")[0]);
-                            OrderUtil.getOrderParam(object, orderParam);
-
-                            map.clear();
-                            map.put("cancel_flag", "2");
-                            map.put("bed_level_order_num", "000000000000000000000000000000");
-                            map.put("passengerTicketStr", orderParam.getPassengerTicketStr());
-                            map.put("oldPassengerStr", orderParam.getOldPassengerStr());
-                            map.put("tour_flag", "dc");
-                            map.put("randCode", "");
-                            map.put("_json_att", "");
-                            map.put("REPEAT_SUBMIT_TOKEN", orderParam.getREPEAT_SUBMIT_TOKEN());
-
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        return service.getPassCode("passenger", "randp");
-                    }
-                })
-                .flatMap(new Func1<ResponseBody, Observable<CheckOrderInfoResponse>>() {
-                    @Override
-                    public Observable<CheckOrderInfoResponse> call(ResponseBody responseBody) {
-                        randCodeImg = BitmapFactory.decodeStream(responseBody.byteStream());
-                        return service.checkOrderInfo(map);
-                    }
-                })
-                .map(new Func1<CheckOrderInfoResponse, Boolean>() {
-                    @Override
-                    public Boolean call(CheckOrderInfoResponse checkOrderInfoResponse) {
-                        CheckOrderInfoResponse.Data data = checkOrderInfoResponse.getData();
-                        if (data.isSubmitStatus()) {
-                            if (data.getIfShowPassCode().equals("Y")) {
-                                showPassCode = true;
-                            }
-                        }
-                        else {
-                            showLongToast(data.getErrMsg());
-                        }
-                        return showPassCode;
-                    }
-                })
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Action1<Boolean>() {
-                    @Override
-                    public void call(Boolean showCode) {
-                        if (showCode) {
-                            showPassCode = false;
-                            buildPassCodeDialog();
-                        }
-                        else {
-                            submitOrderNext(service, orderParam.getREPEAT_SUBMIT_TOKEN());
-                        }
-                    }
-                });
-    }
-
     private void buildPassCodeDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         View view = View.inflate(MainActivity.this, R.layout.show_passcode, null);
@@ -656,120 +425,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         builder.setTitle("选择验证码");
         builder.setCancelable(false);
         builder.setView(view);
-        builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if (TextUtils.isEmpty(RandCodeUtil.getRandCode(list))) {
-                    showShortToast("请点击验证码进行验证");
-                }
-                else {
-                    randCode = RandCodeUtil.getRandCode(list);
-                    checkRandCodeAndNext();
-                }
-            }
-        });
+        builder.setPositiveButton("确定", null);
         builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
             }
         });
-        builder.show();
-    }
-
-    private void refreshPassCode() {
-        HttpService service = RetrofitManager.getInstance().getService();
-        getPassCodeSubscription = service.getPassCode("passenger", "randp")
-                .map(new Func1<ResponseBody, Bitmap>() {
-                    @Override
-                    public Bitmap call(ResponseBody responseBody) {
-                        return BitmapFactory.decodeStream(responseBody.byteStream());
-                    }
-                })
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Action1<Bitmap>() {
-                    @Override
-                    public void call(Bitmap bitmap) {
-                        imageView.setImageBitmap(bitmap);
-                    }
-                });
-    }
-
-    private void submitOrderNext(final HttpService service, final String token) {
-        orderParam.setRandCode(randCode);
-        map.clear();
-        map.put("passengerTicketStr", orderParam.getPassengerTicketStr());
-        map.put("oldPassengerStr", orderParam.getOldPassengerStr());
-        map.put("randCode", orderParam.getRandCode());
-        map.put("purpose_codes", orderParam.getPurpose_codes());
-        map.put("key_check_isChange", orderParam.getKey_check_isChange());
-        map.put("leftTicketStr", orderParam.getLeftTicketStr());
-        map.put("train_location", orderParam.getTrain_location());
-        map.put("choose_seats", orderParam.getChoose_seats());
-        map.put("seatDetailType", orderParam.getSeatDetailType());
-        map.put("roomType", orderParam.getRoomType());
-        map.put("dwAll", orderParam.getDwAll());
-        map.put("_json_att", orderParam.get_json_att());
-        map.put("REPEAT_SUBMIT_TOKEN", orderParam.getREPEAT_SUBMIT_TOKEN());
-        service.confirmSingleForQueue(map)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Action1<ConfirmSingleForQueueResponse>() {
-                    @Override
-                    public void call(ConfirmSingleForQueueResponse confirmSingleForQueueResponse) {
-                        if (confirmSingleForQueueResponse.getData().isSubmitStatus()) {
-                            queryOrderWaitTimeLoop(service, token);
-                        }
-                    }
-                });
-    }
-
-    private void queryOrderWaitTimeLoop(final HttpService service, final String token) {
-        SubscriptionUtil.unSubscribe(queryWaitTimeLoopSubscription);
-        queryWaitTimeLoopSubscription = Observable.interval(200, TimeUnit.MILLISECONDS)
-                .flatMap(new Func1<Long, Observable<QueryOrderWaitTimeResponse>>() {
-                    @Override
-                    public Observable<QueryOrderWaitTimeResponse> call(Long aLong) {
-                        return service.queryOrderWaitTime(getRandom(), "dc", "", token);
-                    }
-                })
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Action1<QueryOrderWaitTimeResponse>() {
-                    @Override
-                    public void call(QueryOrderWaitTimeResponse queryOrderWaitTimeResponse) {
-                        QueryOrderWaitTimeResponse.Data data = queryOrderWaitTimeResponse.getData();
-                        if (data.getWaitTime() < 0) {
-                            submitOrderCompleted(service, data.getOrderId(), token);
-                        }
-                    }
-                });
-    }
-
-    private void submitOrderCompleted(HttpService service, String orderId, String token) {
-        SubscriptionUtil.unSubscribe(queryWaitTimeLoopSubscription);
-        orderCompleteSubscription = service.resultOrderForDcQueue(orderId, "", token)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Action1<ResultOrderResponse>() {
-                    @Override
-                    public void call(ResultOrderResponse resultOrderResponse) {
-                        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-                        Notification notification = new Notification.Builder(MainActivity.this)
-                                .setContentTitle("Tickets")
-                                .setContentText("打开12306看看")
-                                .setSmallIcon(R.mipmap.ic_launcher)
-                                .setDefaults(Notification.DEFAULT_ALL)
-                                .build();
-                        manager.notify(1, notification);
-                    }
-                });
-    }
-
-    private String getRandom() {
-        String s = new Random().nextDouble() + "";
-        return s.split("\\.")[1].substring(0, 13);
+        alertDialog = builder.show();
+        alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (TextUtils.isEmpty(RandCodeUtil.getRandCode(list))) {
+                    showShortToast("请点击验证码进行验证");
+                }
+                else {
+                    randCode = RandCodeUtil.getRandCode(list);
+                    RxBus.getDefault().post(randCode);
+                }
+            }
+        });
     }
 
     private void addToList() {
@@ -784,21 +459,71 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         list.add(selected8);
     }
 
-    private void checkRandCodeAndNext() {
-        final HttpService service = RetrofitManager.getInstance().getService();
-        service.checkRandCode2(randCode, "randp", "", orderParam.getREPEAT_SUBMIT_TOKEN())
+    private void registerBus() {
+        SubscriptionUtil.unSubscribe(progressbarBus);
+        progressbarBus = RxBus.getDefault().toObservable()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Action1<CheckRandCodeResponse>() {
+                .subscribe(new Action1<Object>() {
                     @Override
-                    public void call(CheckRandCodeResponse checkRandCodeResponse) {
-                        if (checkRandCodeResponse.getData().getResult().equals("1")) {
-                            submitOrderNext(service, orderParam.getREPEAT_SUBMIT_TOKEN());
+                    public void call(Object o) {
+                        if (o.toString().equals("start")) {
+                            progressBar.setVisibility(View.VISIBLE);
+                        }
+                        else if (o.toString().equals("stop")) {
+                            progressBar.setVisibility(View.INVISIBLE);
+                        }
+                        else if (o.toString().equals("getTrains")) {
+                            getTrains();
+                        }
+                        else if (o.toString().equals("count")) {
+                            queryCount.setText("第" + ++count + "次查询");
+                        }
+                        else if (o.toString().equals("button")) {
+                            button.setText("开始查询");
+                        }
+                        else if (o.toString().equals("clear")) {
+                            RandCodeUtil.clearSelected(list);
+                        }
+                        else if (o.toString().equals("refreshPassCode")) {
+                            refreshPassCode = true;
+                        }
+                        else if (o.toString().equals("pass")) {
+                            alertDialog.dismiss();
+                        }
+                        else if (o instanceof Bitmap) {
+                            if (refreshPassCode) {
+                                imageView.setImageBitmap((Bitmap) o);
+                                refreshPassCode = false;
+                            }
+                            else {
+                                randCodeImg = (Bitmap) o;
+                                buildPassCodeDialog();
+                            }
+                        }
+                        else if (o instanceof LoopResponse) {
+                            LoopResponse response = (LoopResponse) o;
+                            trainCode.setText(response.getTrainCode());
+                            rwNum.setText(response.getRwNum());
+                            ywNum.setText(response.getYwNum());
+                            yzNum.setText(response.getYzNum());
+                            wzNum.setText(response.getWzNum());
+                        }
+                        else if (o.toString().equals("get")) {
+                            stopService(new Intent(MainActivity.this, LoopService.class));
+                            NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                            Notification notification = new Notification.Builder(MainActivity.this)
+                                    .setContentTitle("Tickets")
+                                    .setContentText("打开12306看看")
+                                    .setSmallIcon(R.mipmap.ic_launcher)
+                                    .setDefaults(Notification.DEFAULT_ALL)
+                                    .build();
+                            manager.notify(1, notification);
                         }
                         else {
-                            showShortToast("验证码错误");
-                            RandCodeUtil.clearSelected(list);
-                            refreshPassCode();
+                            if (!o.toString().contains(",")) {
+                                showLongToast(o.toString());
+                            }
                         }
                     }
                 });
@@ -822,9 +547,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onStop() {
         super.onStop();
         SubscriptionUtil.unSubscribe(querySubscription);
-        SubscriptionUtil.unSubscribe(orderSubscription);
-        SubscriptionUtil.unSubscribe(orderCompleteSubscription);
-        SubscriptionUtil.unSubscribe(getPassCodeSubscription);
         SubscriptionUtil.unSubscribe(progressbarBus);
     }
 

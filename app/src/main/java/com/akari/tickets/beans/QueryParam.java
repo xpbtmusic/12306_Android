@@ -1,10 +1,13 @@
 package com.akari.tickets.beans;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * Created by Akari on 2017/1/4.
  */
 
-public class QueryParam {
+public class QueryParam implements Parcelable {
     private String url;
     private String from_station_code;
     private String to_station_code;
@@ -113,4 +116,50 @@ public class QueryParam {
     public void setPassenger(String passenger) {
         this.passenger = passenger;
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(url);
+        dest.writeString(from_station_code);
+        dest.writeString(to_station_code);
+        dest.writeString(from_station);
+        dest.writeString(to_station);
+        dest.writeString(train_code);
+        dest.writeString(train_date);
+        dest.writeString(back_train_date);
+        dest.writeString(purpose_codes);
+        dest.writeStringArray(seats);
+        dest.writeStringArray(date2);
+        dest.writeString(passenger);
+    }
+
+    public static final Parcelable.Creator<QueryParam> CREATOR = new Creator<QueryParam>() {
+        @Override
+        public QueryParam createFromParcel(Parcel source) {
+            QueryParam queryParam = new QueryParam();
+            queryParam.url = source.readString();
+            queryParam.from_station_code = source.readString();
+            queryParam.to_station_code = source.readString();
+            queryParam.from_station = source.readString();
+            queryParam.to_station = source.readString();
+            queryParam.train_code = source.readString();
+            queryParam.train_date = source.readString();
+            queryParam.back_train_date = source.readString();
+            queryParam.purpose_codes = source.readString();
+            queryParam.seats = source.createStringArray();
+            queryParam.date2 = source.createStringArray();
+            queryParam.passenger = source.readString();
+            return queryParam;
+        }
+
+        @Override
+        public QueryParam[] newArray(int size) {
+            return new QueryParam[size];
+        }
+    };
 }

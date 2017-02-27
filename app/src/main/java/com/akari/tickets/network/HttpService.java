@@ -3,6 +3,7 @@ package com.akari.tickets.network;
 import com.akari.tickets.beans.CheckOrderInfoResponse;
 import com.akari.tickets.beans.CheckRandCodeResponse;
 import com.akari.tickets.beans.ConfirmSingleForQueueResponse;
+import com.akari.tickets.beans.GetQueueCountResponse;
 import com.akari.tickets.beans.LoginSuggestResponse;
 import com.akari.tickets.beans.QueryOrderWaitTimeResponse;
 import com.akari.tickets.beans.QueryTrainsResponse;
@@ -75,6 +76,10 @@ public interface HttpService {
     @FormUrlEncoded
     @POST("confirmPassenger/checkOrderInfo")
     Observable<CheckOrderInfoResponse> checkOrderInfo(@FieldMap(encoded = true) Map<String, String> fields);
+
+    @FormUrlEncoded
+    @POST("confirmPassenger/getQueueCount")
+    Observable<GetQueueCountResponse> getQueueCount(@FieldMap Map<String, String> fields);
 
     @FormUrlEncoded
     @POST("confirmPassenger/confirmSingleForQueue")
